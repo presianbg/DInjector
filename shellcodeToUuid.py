@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import uuid 
+import uuid
 
 
 def convertToUUID(shellcode):
@@ -10,12 +10,12 @@ def convertToUUID(shellcode):
 		#print(f'[+] Modified shellcode length: {len(shellcode) + (16 - (len(shellcode) % 16))}')
 		
 		null_nytes = b'\x00' * (16 - (len(shellcode) % 16))
-		shellcode += null_nytes 
+		shellcode += null_nytes
 
-	concatedUuids = ''
+	concatedUuids = b''
 	for i in range(0, len(shellcode), 16):
 		uuid_str = str(uuid.UUID(bytes_le=shellcode[i:i+16]))
-		concatedUuids += uuid_str + '|'
+		concatedUuids += uuid_str.encode() + b'|'
 
 	return concatedUuids
 
