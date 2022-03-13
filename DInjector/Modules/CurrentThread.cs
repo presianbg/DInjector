@@ -45,13 +45,6 @@ namespace DInjector
             bool Alertable, uint Timeout);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtFreeVirtualMemory(
-            IntPtr processHandle,
-            ref IntPtr baseAddress,
-            ref IntPtr regionSize,
-            uint freeType);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate bool CloseHandle(IntPtr hObject);
 
         private static void closeHandle(IntPtr hObject)
@@ -150,26 +143,6 @@ namespace DInjector
                 Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");
             else
                 Console.WriteLine($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
-
-            #endregion
-
-            #region NtFreeVirtualMemory (shellcode)
-
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtFreeVirtualMemory");
-            NtFreeVirtualMemory sysNtFreeVirtualMemory = (NtFreeVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtFreeVirtualMemory));
-
-            regionSize = IntPtr.Zero;
-
-            ntstatus = sysNtFreeVirtualMemory(
-                Process.GetCurrentProcess().Handle,
-                ref baseAddress,
-                ref regionSize,
-                DI.Data.Win32.Kernel32.MEM_RELEASE);
-
-            if (ntstatus == 0)
-                Console.WriteLine("(CurrentThread) [+] NtFreeVirtualMemory");
-            else
-                Console.WriteLine($"(CurrentThread) [-] NtFreeVirtualMemory: {ntstatus}");
 
             #endregion
 

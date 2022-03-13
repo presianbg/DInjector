@@ -18,6 +18,8 @@ DInjector
                                       S H E L L C O D E
 ```
 
+---
+
 This repository is an accumulation of code snippets for various **shellcode injection** techniques using fantastic [D/Invoke](https://thewover.github.io/Dynamic-Invoke/) API by @TheWover and @FuzzySecurity.
 
 Features:
@@ -29,6 +31,7 @@ Features:
 * Simple sandbox detection & evasion
 * Prime numbers calculation to emulate sleep for in-memory scan evasion
 * Ntdll.dll unhooking
+* Cobalt Strike Integration
 
 :information_source: Based on my testings the DInvoke NuGet [package](https://www.nuget.org/packages/DInvoke/) itself is being flagged by many commercial AV/EDR solutions when incuded as an embedded resource via [Costura.Fody](https://www.nuget.org/packages/Costura.Fody/) (or similar approaches), so I've [shrinked](https://github.com/snovvcrash/DInvoke/tree/dinjector) it a bit and included from [source](https://github.com/TheWover/DInvoke) to achieve better OpSec.
 
@@ -65,9 +68,15 @@ Global arguments:
 |-------------|----------|--------------------------|--------------------------------------------------------------------|
 | `/sc`       | ✔️        | `http://10.10.13.37/enc` | Sets shellcode path (can be loaded from URL or as a base64 string) |
 | `/password` | ✔️        | `Passw0rd!`              | Sets password to decrypt the shellcode                             |
+| `/sleep`    | ❌        | `10`, `25`               | Sets number of seconds (approx.) to sleep before execution         |
 | `/am51`     | ❌        | `True`, `False`          | Applies AMSI bypass                                                |
 | `/unhook`   | ❌        | `True`, `False`          | Unhooks ntdll.dll                                                  |
-| `/sleep`    | ❌        | `10`, `25`               | Sets number of seconds (approx.) to sleep before execution         |
+
+## Cobalt Strike Integration
+
+In order to use DInjector from Cobalt Strike compile the project as a console application and put the assembly next to the Aggressor script.
+
+![cs](https://user-images.githubusercontent.com/23141800/158037009-2e9eaa9c-08ff-48ed-9f84-86b7345974d3.png)
 
 ## Modules
 
@@ -77,13 +86,13 @@ Global arguments:
 
 ```yaml
 module_name: 'functionpointer'
+arguments:
 description: |
   Allocates a RW memory region, copies the shellcode into it and executes it like a function.
 calls:
   - ntdll.dll:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
-    3: 'NtFreeVirtualMemory'
 opsec_safe: false
 references:
   - 'http://disbauxes.upc.es/code/two-basic-ways-to-run-and-test-shellcode/'
@@ -101,6 +110,7 @@ references:
 
 ```yaml
 module_name: 'functionpointerv2'
+arguments:
 description: |
   Sets RX on a byte array and executes it like a function.
 calls:
@@ -117,6 +127,7 @@ references:
 
 ```yaml
 module_name: 'clipboardpointer'
+arguments:
 description: |
   Copies shellcode bytes into the clipboard, sets RX on it and executes it like a function.
 calls:
@@ -135,6 +146,7 @@ references:
 
 ```yaml
 module_name: 'currentthread'
+arguments:
 description: |
   Injects shellcode into current process.
   Thread execution via NtCreateThreadEx.
@@ -144,16 +156,16 @@ calls:
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     3: 'NtCreateThreadEx'
     4: 'NtWaitForSingleObject'
-    5: 'NtFreeVirtualMemory'
 opsec_safe: false
 references:
   - 'https://github.com/XingYun-Cloud/D-Invoke-syscall/blob/main/Program.cs'
 ```
 
-### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs)
+### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs) (FOR SMALL-[SIZE](https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate) PAYLOADS)
 
 ```yaml
 module_name: 'currentthreaduuid'
+arguments:
 description: |
   Injects shellcode into current process.
   Thread execution via EnumSystemLocalesA.
@@ -185,7 +197,6 @@ calls:
     3: 'NtWriteVirtualMemory (shellcode)'
     4: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     5: 'NtCreateThreadEx'
-    6: 'NtFreeVirtualMemory'
 opsec_safe: false
 references:
   - 'https://github.com/S3cur3Th1sSh1t/SharpImpersonation/blob/main/SharpImpersonation/Shellcode.cs'
@@ -207,7 +218,7 @@ calls:
     2: 'NtWriteVirtualMemory (shellcode)'
     3: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     4: 'NtCreateThreadEx'
-opsec_safe: -
+opsec_safe:
 references:
   - 'https://www.netero1010-securitylab.com/eavsion/alternative-process-injection'
 ```
@@ -253,14 +264,13 @@ calls:
     5: 'NtCreateThreadEx (CREATE_SUSPENDED)'
     6: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     7: 'NtResumeThread'
-    8: 'NtFreeVirtualMemory'
 opsec_safe: true
 references:
   - 'https://labs.f-secure.com/blog/bypassing-windows-defender-runtime-scanning/'
   - 'https://github.com/plackyhacker/Suspended-Thread-Injection/blob/main/injection.cs'
 ```
 
-### [RemoteThreadKernelCB](/DInjector/Modules/RemoteThreadKernelCB.cs)
+### [RemoteThreadKernelCB](/DInjector/Modules/RemoteThreadKernelCB.cs) (UNSTABLE)
 
 ```yaml
 module_name: 'remotethreadkernelcb'
@@ -285,7 +295,7 @@ calls:
      9: 'NtProtectVirtualMemory (PAGE_READWRITE)'
     10: 'NtWriteVirtualMemory (origData)'
     11: 'NtProtectVirtualMemory (oldProtect)'
-opsec_safe: -
+opsec_safe:
 references:
   - 'https://t0rchwo0d.github.io/windows/Windows-Process-Injection-Technique-KernelCallbackTable/'
   - 'https://modexp.wordpress.com/2019/05/25/windows-injection-finspy/'
@@ -316,7 +326,6 @@ calls:
     4: 'NtOpenThread'
     5: 'NtQueueApcThread'
     6: 'NtAlertResumeThread'
-    7: 'NtFreeVirtualMemory'
 opsec_safe: true
 references:
   - 'https://rastamouse.me/exploring-process-injection-opsec-part-2/'
@@ -348,7 +357,6 @@ calls:
     5: 'GetThreadContext'
     6: 'SetThreadContext'
     7: 'NtResumeThread'
-    8: 'NtFreeVirtualMemory'
 opsec_safe: true
 references:
   - 'https://blog.xpnsec.com/undersanding-and-evading-get-injectedthread/'

