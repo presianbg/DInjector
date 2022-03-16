@@ -20,7 +20,7 @@ DInjector
 
 ---
 
-This repository is an accumulation of code snippets for various **shellcode injection** techniques using fantastic [D/Invoke](https://thewover.github.io/Dynamic-Invoke/) API by @TheWover and @FuzzySecurity.
+This repository is an accumulation of code snippets for various **shellcode injection** techniques using fantastic [D/Invoke](https://thewover.github.io/Dynamic-Invoke/) API by [@TheWover](https://twitter.com/therealwover) and [@FuzzySecurity](https://twitter.com/fuzzysec).
 
 Features:
 
@@ -31,7 +31,7 @@ Features:
 * Simple sandbox detection & evasion
 * Prime numbers calculation to emulate sleep for in-memory scan evasion
 * Ntdll.dll unhooking
-* Cobalt Strike Integration
+* Cobalt Strike integration
 
 :information_source: Based on my testings the DInvoke NuGet [package](https://www.nuget.org/packages/DInvoke/) itself is being flagged by many commercial AV/EDR solutions when incuded as an embedded resource via [Costura.Fody](https://www.nuget.org/packages/Costura.Fody/) (or similar approaches), so I've [shrinked](https://github.com/snovvcrash/DInvoke/tree/dinjector) it a bit and included from [source](https://github.com/TheWover/DInvoke) to achieve better OpSec.
 
@@ -78,7 +78,7 @@ In order to use DInjector from Cobalt Strike compile the project as a console ap
 
 ![cs](https://user-images.githubusercontent.com/23141800/158037009-2e9eaa9c-08ff-48ed-9f84-86b7345974d3.png)
 
-## Modules
+## Techniques
 
 :warning: OpSec safe considerations are based on my personal usage expirience and some testings along the way.
 
@@ -433,5 +433,5 @@ references:
 
 ## Credits
 
-* @TheWover and @FuzzySecurity for their awesome [DInvoke](https://github.com/TheWover/DInvoke) project.
+* [@TheWover](https://twitter.com/therealwover) and [@FuzzySecurity](https://twitter.com/fuzzysec) for their awesome [DInvoke](https://github.com/TheWover/DInvoke) project.
 * All those great researchers mentioned in the modules references above.
