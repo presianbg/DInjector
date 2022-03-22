@@ -79,7 +79,6 @@ if __name__ == '__main__':
 	if args.algorithm == 'aes':
 		iv = os.urandom(16)
 		ctx = AES(args.password, iv)
-		enc = ctx.encrypt(shellcode)
 	elif args.algorithm == 'xor':
 		ctx = XOR(args.password)
 
