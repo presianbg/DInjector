@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -48,7 +49,7 @@ namespace DInjector
             object[] parameters = { hProcess, hModule, mi, cb };
             var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("psapi.dll", "GetModuleInformation", typeof(GetModuleInformation), ref parameters);
 
-            if (!result) lpmodinfo = mi;
+            if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
             lpmodinfo = (MODULEINFO)parameters[2];
 
             return result;
@@ -61,7 +62,7 @@ namespace DInjector
             object[] parameters = { lpAddress, dwSize, flNewProtect, oldProtect };
             var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "VirtualProtect", typeof(VirtualProtect), ref parameters);
 
-            if (!result) lpflOldProtect = oldProtect;
+            if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
             lpflOldProtect = (uint)parameters[3];
 
             return result;

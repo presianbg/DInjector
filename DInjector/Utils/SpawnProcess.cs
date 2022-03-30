@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -83,7 +84,7 @@ namespace DInjector
             object[] parameters = { applicationName, null, pa, ta, false, creationFlags, IntPtr.Zero, workingDirectory, startupInfoEx, pi };
             var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CreateProcessA", typeof(CreateProcessA), ref parameters);
 
-            if (!result) processInformation = pi;
+            if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
             processInformation = (DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION)parameters[9];
 
             return result;

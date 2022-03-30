@@ -47,10 +47,10 @@ namespace DInjector
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate bool CloseHandle(IntPtr hObject);
 
-        private static void closeHandle(IntPtr hObject)
+        private static bool closeHandle(IntPtr hObject)
         {
             object[] parameters = { hObject };
-            _ = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CloseHandle", typeof(CloseHandle), ref parameters);
+            return (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CloseHandle", typeof(CloseHandle), ref parameters);
         }
 
         public static void Execute(byte[] shellcodeBytes)
