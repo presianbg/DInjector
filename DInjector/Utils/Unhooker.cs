@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -14,66 +13,6 @@ namespace DInjector
     /// </summary>
     class Unhooker
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate bool GetModuleInformation(
-            IntPtr hProcess,
-            IntPtr hModule,
-            out MODULEINFO lpmodinfo,
-            uint cb);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate bool VirtualProtect(
-            IntPtr lpAddress,
-            UIntPtr dwSize,
-            uint flNewProtect,
-            out uint lpflOldProtect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate void CopyMemory(
-            IntPtr destination,
-            IntPtr source,
-            uint length);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct MODULEINFO
-        {
-            public IntPtr lpBaseOfDll;
-            public uint SizeOfImage;
-            public IntPtr EntryPoint;
-        }
-
-        private static bool getModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, uint cb)
-        {
-            MODULEINFO mi = new MODULEINFO();
-
-            object[] parameters = { hProcess, hModule, mi, cb };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("psapi.dll", "GetModuleInformation", typeof(GetModuleInformation), ref parameters);
-
-            if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
-            lpmodinfo = (MODULEINFO)parameters[2];
-
-            return result;
-        }
-
-        private static bool virtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect)
-        {
-            uint oldProtect = 0;
-
-            object[] parameters = { lpAddress, dwSize, flNewProtect, oldProtect };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "VirtualProtect", typeof(VirtualProtect), ref parameters);
-
-            if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
-            lpflOldProtect = (uint)parameters[3];
-
-            return result;
-        }
-
-        private static void copyMemory(IntPtr destination, IntPtr source, uint length)
-        {
-            object[] parameters = { destination, source, length };
-            _ = DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "RtlCopyMemory", typeof(CopyMemory), ref parameters);
-        }
-
         public static void Unhook()
         {
             try
@@ -132,8 +71,8 @@ namespace DInjector
 
                 #endregion
 
-                MODULEINFO mi = new MODULEINFO();
-                getModuleInformation(Process.GetCurrentProcess().Handle, hModule, out mi, (uint)Marshal.SizeOf(mi));
+                Win32.MODULEINFO mi = new Win32.MODULEINFO();
+                Win32.GetModuleInformation(Process.GetCurrentProcess().Handle, hModule, out mi, (uint)Marshal.SizeOf(mi));
 
                 IntPtr hookedLibAddress = mi.lpBaseOfDll;
                 DI.Data.PE.IMAGE_DOS_HEADER idh = (DI.Data.PE.IMAGE_DOS_HEADER)Marshal.PtrToStructure(hookedLibAddress, typeof(DI.Data.PE.IMAGE_DOS_HEADER));
@@ -159,11 +98,11 @@ namespace DInjector
                         IntPtr unhookedSectionAddress = IntPtr.Add(unhookedLibAddress, (int)ish.VirtualAddress);
 
                         uint oldProtect = 0;
-                        _ = virtualProtect(hookedSectionAddress, (UIntPtr)ish.VirtualSize, DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE, out oldProtect);
+                        _ = Win32.VirtualProtect(hookedSectionAddress, (UIntPtr)ish.VirtualSize, DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE, out oldProtect);
 
-                        copyMemory(hookedSectionAddress, unhookedSectionAddress, ish.VirtualSize);
+                        Win32.CopyMemory(hookedSectionAddress, unhookedSectionAddress, ish.VirtualSize);
 
-                        _ = virtualProtect(hookedSectionAddress, (UIntPtr)ish.VirtualSize, oldProtect, out uint _);
+                        _ = Win32.VirtualProtect(hookedSectionAddress, (UIntPtr)ish.VirtualSize, oldProtect, out uint _);
 
                         break;
                     }

