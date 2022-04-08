@@ -10,21 +10,17 @@ namespace DInjector
 {
     class Win32
     {
-        public static IntPtr LoadLibraryA(string libFileName)
-        {
-            object[] parameters = { libFileName };
-            var result = (IntPtr)DynamicAPIInvoke("kernel32.dll", "LoadLibraryA", typeof(Delegates.LoadLibraryA), ref parameters);
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        public static extern IntPtr VirtualAllocExNuma(
+            IntPtr hProcess,
+            IntPtr lpAddress,
+            uint dwSize,
+            UInt32 flAllocationType,
+            UInt32 flProtect,
+            UInt32 nndPreferred);
 
-            return result;
-        }
-
-        public static IntPtr GetProcAddress(IntPtr hModule, string procName)
-        {
-            object[] parameters = { hModule, procName };
-            var result = (IntPtr)DynamicAPIInvoke("kernel32.dll", "GetProcAddress", typeof(Delegates.GetProcAddress), ref parameters);
-
-            return result;
-        }
+        [DllImport("kernel32.dll")]
+        public static extern void Sleep(uint dwMilliseconds);
 
         public static bool InitializeProcThreadAttributeList(IntPtr lpAttributeList, int dwAttributeCount, ref IntPtr lpSize)
         {

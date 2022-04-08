@@ -64,9 +64,7 @@ namespace DInjector
                     // Write data
                     BytesWritten = DI.DynamicInvoke.Native.NtWriteVirtualMemory((IntPtr)(-1), pVirtualSectionBase, pRawSectionBase, section.SizeOfRawData);
                     if (BytesWritten != section.SizeOfRawData)
-                    {
                         throw new InvalidOperationException("Failed to write to memory.");
-                    }
                 }
 
                 #endregion

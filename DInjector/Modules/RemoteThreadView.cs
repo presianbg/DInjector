@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -21,7 +22,7 @@ namespace DInjector
                 ref oa,
                 ref ci);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtOpenProcess");
             else
                 Console.WriteLine($"(RemoteThreadView) [-] NtOpenProcess: {ntstatus}");
@@ -44,7 +45,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.SEC_COMMIT,
                 IntPtr.Zero);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtCreateSection, PAGE_EXECUTE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThreadView) [-] NtCreateSection, PAGE_EXECUTE_READWRITE: {ntstatus}");
@@ -72,7 +73,7 @@ namespace DInjector
                 0, // AllocationType
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtMapViewOfSection, PAGE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThreadView) [-] NtMapViewOfSection, PAGE_READWRITE: {ntstatus}");
@@ -99,7 +100,7 @@ namespace DInjector
                 0, // AllocationType
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtMapViewOfSection, PAGE_EXECUTE_READ");
             else
                 Console.WriteLine($"(RemoteThreadView) [-] NtMapViewOfSection, PAGE_EXECUTE_READ: {ntstatus}");
@@ -127,7 +128,7 @@ namespace DInjector
                 ref hThread,
                 IntPtr.Zero);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] RtlCreateUserThread");
             else
                 Console.WriteLine($"(RemoteThreadView) [-] RtlCreateUserThread: {ntstatus}");
@@ -140,7 +141,7 @@ namespace DInjector
                 lhProcess,
                 lbaseAddress);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtUnmapViewOfSection");
             else
                 Console.WriteLine($"(RemoteThreadView) [-] NtUnmapViewOfSection: {ntstatus}");

