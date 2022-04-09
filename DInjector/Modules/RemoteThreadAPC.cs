@@ -38,7 +38,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -59,7 +59,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtWriteVirtualMemory");
             else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtWriteVirtualMemory: {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -79,7 +79,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -98,7 +98,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtOpenThread");
             else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtOpenThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtOpenThread: {ntstatus}");
 
             #endregion
 
@@ -114,12 +114,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtQueueApcThread");
             else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtQueueApcThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtQueueApcThread: {ntstatus}");
 
             #endregion
 
             #region NtAlertResumeThread
-            
+
             uint suspendCount = 0;
 
             ntstatus = Syscalls.NtAlertResumeThread(
@@ -129,12 +129,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadAPC) [+] NtAlertResumeThread");
             else
-                Console.WriteLine($"(RemoteThreadAPC) [-] NtAlertResumeThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtAlertResumeThread: {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
-            Win32.CloseHandle(hProcess);
+            Syscalls.NtClose(hThread);
+            Syscalls.NtClose(hProcess);
         }
     }
 }

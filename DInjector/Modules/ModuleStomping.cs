@@ -72,7 +72,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtAllocateVirtualMemory (bModuleName), PAGE_READWRITE");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtAllocateVirtualMemory (bModuleName), PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtAllocateVirtualMemory (bModuleName), PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -92,7 +92,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtAllocateVirtualMemory (shim), PAGE_READWRITE");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtAllocateVirtualMemory (shim), PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtAllocateVirtualMemory (shim), PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -113,7 +113,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtWriteVirtualMemory (bModuleName)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtWriteVirtualMemory (bModuleName): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtWriteVirtualMemory (bModuleName): {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -136,7 +136,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtWriteVirtualMemory (shim)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtWriteVirtualMemory (shim): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtWriteVirtualMemory (shim): {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -158,7 +158,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtProtectVirtualMemory (shim), PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtProtectVirtualMemory (shim), PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtProtectVirtualMemory (shim), PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -182,7 +182,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtCreateThreadEx (shim)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtCreateThreadEx (shim): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtCreateThreadEx (shim): {ntstatus}");
 
             #endregion
 
@@ -196,7 +196,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtWaitForSingleObject");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtWaitForSingleObject: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtWaitForSingleObject: {ntstatus}");
 
             #endregion
 
@@ -213,7 +213,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtFreeVirtualMemory (allocModule)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtFreeVirtualMemory (allocModule): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtFreeVirtualMemory (allocModule): {ntstatus}");
 
             #endregion
 
@@ -230,11 +230,11 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtFreeVirtualMemory (allocShim)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtFreeVirtualMemory (allocShim): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtFreeVirtualMemory (allocShim): {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
+            Syscalls.NtClose(hThread);
 
             #region Find targetAddress
 
@@ -271,7 +271,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtProtectVirtualMemory (shellcode), PAGE_READWRITE");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtProtectVirtualMemory (shellcode), PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtProtectVirtualMemory (shellcode), PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -292,7 +292,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtWriteVirtualMemory (shellcode)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtWriteVirtualMemory (shellcode): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtWriteVirtualMemory (shellcode): {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -313,7 +313,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtProtectVirtualMemory (shellcode), PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtProtectVirtualMemory (shellcode), PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtProtectVirtualMemory (shellcode), PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -337,12 +337,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(ModuleStomping) [+] NtCreateThreadEx (shellcode)");
             else
-                Console.WriteLine($"(ModuleStomping) [-] NtCreateThreadEx (shellcode): {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtCreateThreadEx (shellcode): {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
-            Win32.CloseHandle(hProcess);
+            Syscalls.NtClose(hThread);
+            Syscalls.NtClose(hProcess);
         }
     }
 }

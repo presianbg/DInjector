@@ -38,7 +38,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -59,7 +59,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtWriteVirtualMemory");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtWriteVirtualMemory: {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -79,7 +79,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -106,7 +106,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtCreateThreadEx, LoadLibraryA, CREATE_SUSPENDED");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtCreateThreadEx, LoadLibraryA, CREATE_SUSPENDED: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtCreateThreadEx, LoadLibraryA, CREATE_SUSPENDED: {ntstatus}");
 
             #endregion
 
@@ -122,7 +122,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtGetContextThread");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtGetContextThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtGetContextThread: {ntstatus}");
 
             #endregion
 
@@ -137,7 +137,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtSetContextThread");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtSetContextThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtSetContextThread: {ntstatus}");
 
             #endregion
 
@@ -152,12 +152,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadContext) [+] NtResumeThread");
             else
-                Console.WriteLine($"(RemoteThreadContext) [-] NtResumeThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadContext) [-] NtResumeThread: {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
-            Win32.CloseHandle(hProcess);
+            Syscalls.NtClose(hThread);
+            Syscalls.NtClose(hProcess);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace DInjector
                 if (ntstatus == NTSTATUS.Success)
                     Console.WriteLine("(AM51) [+] NtProtectVirtualMemory, PAGE_READWRITE");
                 else
-                    Console.WriteLine($"(AM51) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                    throw new Exception($"(AM51) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
                 Console.WriteLine("(AM51) [>] Patching at address: " + string.Format("{0:X}", pFunction.ToInt64()));
                 Marshal.Copy(patch, 0, pFunction, patch.Length);
@@ -78,7 +78,7 @@ namespace DInjector
                 if (ntstatus == NTSTATUS.Success)
                     Console.WriteLine("(AM51) [+] NtProtectVirtualMemory, oldProtect");
                 else
-                    Console.WriteLine($"(AM51) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
+                    throw new Exception($"(AM51) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
 
                 #endregion
             }

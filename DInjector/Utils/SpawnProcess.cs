@@ -95,7 +95,7 @@ namespace DInjector
             if (result)
                 Console.WriteLine("(SpawnProcess) [+] CreateProcessA");
             else
-                Console.WriteLine("(SpawnProcess) [-] CreateProcessA");
+                throw new Exception("(SpawnProcess) [-] CreateProcessA");
 
             _ = Win32.DeleteProcThreadAttributeList(startupInfoEx.lpAttributeList);
             Marshal.FreeHGlobal(lpValue);

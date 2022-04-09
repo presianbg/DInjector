@@ -25,7 +25,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtOpenProcess");
             else
-                Console.WriteLine($"(RemoteThread) [-] NtOpenProcess: {ntstatus}");
+                throw new Exception($"(RemoteThread) [-] NtOpenProcess: {ntstatus}");
 
             #endregion
 
@@ -45,7 +45,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                Console.WriteLine($"(RemoteThread) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(RemoteThread) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -66,7 +66,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtWriteVirtualMemory");
             else
-                Console.WriteLine($"(RemoteThread) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(RemoteThread) [-] NtWriteVirtualMemory: {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -86,7 +86,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(RemoteThread) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(RemoteThread) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -110,12 +110,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThread) [+] NtCreateThreadEx");
             else
-                Console.WriteLine($"(RemoteThread) [-] NtCreateThreadEx: {ntstatus}");
+                throw new Exception($"(RemoteThread) [-] NtCreateThreadEx: {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
-            Win32.CloseHandle(hProcess);
+            Syscalls.NtClose(hThread);
+            Syscalls.NtClose(hProcess);
         }
     }
 }

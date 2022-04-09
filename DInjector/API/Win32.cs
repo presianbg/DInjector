@@ -62,15 +62,15 @@ namespace DInjector
             return result;
         }
 
-        public static bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out Win32.MODULEINFO lpmodinfo, uint cb)
+        public static bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, uint cb)
         {
-            Win32.MODULEINFO mi = new Win32.MODULEINFO();
+            MODULEINFO mi = new MODULEINFO();
 
             object[] parameters = { hProcess, hModule, mi, cb };
             var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("psapi.dll", "GetModuleInformation", typeof(Delegates.GetModuleInformation), ref parameters);
 
             if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
-            lpmodinfo = (Win32.MODULEINFO)parameters[2];
+            lpmodinfo = (MODULEINFO)parameters[2];
 
             return result;
         }
@@ -176,12 +176,6 @@ namespace DInjector
 
             ThreadHandle = (IntPtr)parameters[8];
             return result;
-        }
-
-        public static bool CloseHandle(IntPtr hObject)
-        {
-            object[] parameters = { hObject };
-            return (bool)DynamicAPIInvoke("kernel32.dll", "CloseHandle", typeof(Delegates.CloseHandle), ref parameters);
         }
 
         [StructLayout(LayoutKind.Sequential)]

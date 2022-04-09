@@ -25,7 +25,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtOpenProcess");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtOpenProcess: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtOpenProcess: {ntstatus}");
 
             #endregion
 
@@ -45,7 +45,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -66,7 +66,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtWriteVirtualMemory");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtWriteVirtualMemory: {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 
@@ -86,7 +86,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtProtectVirtualMemory, PAGE_NOACCESS");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtProtectVirtualMemory, PAGE_NOACCESS: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtProtectVirtualMemory, PAGE_NOACCESS: {ntstatus}");
 
             #endregion
 
@@ -110,7 +110,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtCreateThreadEx, CREATE_SUSPENDED");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtCreateThreadEx, CREATE_SUSPENDED: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtCreateThreadEx, CREATE_SUSPENDED: {ntstatus}");
 
             #endregion
 
@@ -134,7 +134,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -149,12 +149,12 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtResumeThread");
             else
-                Console.WriteLine($"(RemoteThreadSuspended) [-] NtResumeThread: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtResumeThread: {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
-            Win32.CloseHandle(hProcess);
+            Syscalls.NtClose(hThread);
+            Syscalls.NtClose(hProcess);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(RemoteThreadDll) [+] NtOpenProcess");
             else
-                Console.WriteLine($"(RemoteThreadDll) [-] NtOpenProcess: {ntstatus}");
+                throw new Exception($"(RemoteThreadDll) [-] NtOpenProcess: {ntstatus}");
 
             #endregion
 
@@ -53,7 +53,7 @@ namespace DInjector
                     if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtProtectVirtualMemory, PAGE_READWRITE");
                     else
-                        Console.WriteLine($"(RemoteThreadDll) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                        throw new Exception($"(RemoteThreadDll) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
                     #endregion
 
@@ -74,7 +74,7 @@ namespace DInjector
                     if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtWriteVirtualMemory");
                     else
-                        Console.WriteLine($"(RemoteThreadDll) [-] NtWriteVirtualMemory: {ntstatus}");
+                        throw new Exception($"(RemoteThreadDll) [-] NtWriteVirtualMemory: {ntstatus}");
 
                     Marshal.FreeHGlobal(buffer);
 
@@ -96,7 +96,7 @@ namespace DInjector
                     if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtProtectVirtualMemory, oldProtect");
                     else
-                        Console.WriteLine($"(RemoteThreadDll) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
+                        throw new Exception($"(RemoteThreadDll) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
 
                     #endregion
 
@@ -120,17 +120,17 @@ namespace DInjector
                     if (ntstatus == NTSTATUS.Success)
                         Console.WriteLine("(RemoteThreadDll) [+] NtCreateThreadEx");
                     else
-                        Console.WriteLine($"(RemoteThreadDll) [-] NtCreateThreadEx: {ntstatus}");
+                        throw new Exception($"(RemoteThreadDll) [-] NtCreateThreadEx: {ntstatus}");
 
                     #endregion
 
-                    Win32.CloseHandle(hThread);
+                    Syscalls.NtClose(hThread);
 
                     break;
                 }
             }
 
-            Win32.CloseHandle(hProcess);
+            Syscalls.NtClose(hProcess);
         }
     }
 }

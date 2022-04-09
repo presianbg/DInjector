@@ -160,6 +160,9 @@ namespace DInjector
             IntPtr BaseAddress);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate NTSTATUS NtClose(IntPtr ObjectHandle);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate bool InitializeProcThreadAttributeList(
             IntPtr lpAttributeList,
             int dwAttributeCount,
@@ -253,8 +256,5 @@ namespace DInjector
             uint Msg,
             IntPtr wParam,
             ref Win32.COPYDATASTRUCT lParam);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate bool CloseHandle(IntPtr hObject);
     }
 }

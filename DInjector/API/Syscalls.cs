@@ -286,5 +286,13 @@ namespace DInjector
                 ProcessHandle,
                 BaseAddress);
         }
+
+        public static NTSTATUS NtClose(IntPtr ObjectHandle)
+        {
+            IntPtr stub = GetSyscallStub("NtClose");
+            Delegates.NtClose ntClose = (Delegates.NtClose)Marshal.GetDelegateForFunctionPointer(stub, typeof(Delegates.NtClose));
+
+            return ntClose(ObjectHandle);
+        }
     }
 }

