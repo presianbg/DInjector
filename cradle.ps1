@@ -4,7 +4,8 @@
 Module name. Choose from:
   
   "functionpointer",
-  "functionpointerv2",
+  "functionpointerunsafe",
+  "msiladdressleak",
   "clipboardpointer",
   "currentthread",
   "currentthreaduuid",

