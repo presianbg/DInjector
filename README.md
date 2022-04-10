@@ -141,7 +141,6 @@ description: |
 api:
 opsec_safe: true
 references:
-  - 'https://www.cybermongol.ca/operator-research/dump-lsass-with-sharpminidump-ntfs-transactions-uac-bypass-exfil-dmp-file-to-dropbox'
   - 'https://github.com/PorLaCola25/TransactedSharpMiniDump/blob/master/SharpMiniDump/Msil.cs'
 ```
 
