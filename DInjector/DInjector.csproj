@@ -81,7 +81,6 @@
     <Compile Include="Modules\FunctionPointer.cs" />
     <Compile Include="Modules\FunctionPointerUnsafe.cs" />
     <Compile Include="Modules\ModuleStomping.cs" />
-    <Compile Include="Modules\MSILAddressLeak.cs" />
     <Compile Include="Modules\ProcessHollowing.cs" />
     <Compile Include="Modules\RemoteThreadKernelCB.cs" />
     <Compile Include="Modules\RemoteThreadDll.cs" />
@@ -91,7 +90,6 @@
     <Compile Include="Modules\RemoteThreadContext.cs" />
     <Compile Include="Modules\RemoteThreadView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\MSIL.cs" />
     <Compile Include="Utils\Unhooker.cs" />
     <Compile Include="Utils\AM51.cs" />
     <Compile Include="Utils\ArgumentParser.cs" />

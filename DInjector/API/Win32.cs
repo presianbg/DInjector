@@ -67,7 +67,7 @@ namespace DInjector
             MODULEINFO mi = new MODULEINFO();
 
             object[] parameters = { hProcess, hModule, mi, cb };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("psapi.dll", "GetModuleInformation", typeof(Delegates.GetModuleInformation), ref parameters);
+            var result = (bool)DynamicAPIInvoke("psapi.dll", "GetModuleInformation", typeof(Delegates.GetModuleInformation), ref parameters);
 
             if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
             lpmodinfo = (MODULEINFO)parameters[2];
@@ -80,7 +80,7 @@ namespace DInjector
             uint oldProtect = 0;
 
             object[] parameters = { lpAddress, dwSize, flNewProtect, oldProtect };
-            var result = (bool)DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "VirtualProtect", typeof(Delegates.VirtualProtect), ref parameters);
+            var result = (bool)DynamicAPIInvoke("kernel32.dll", "VirtualProtect", typeof(Delegates.VirtualProtect), ref parameters);
 
             if (!result) throw new Win32Exception(Marshal.GetLastWin32Error());
             lpflOldProtect = (uint)parameters[3];
@@ -88,10 +88,18 @@ namespace DInjector
             return result;
         }
 
+        public static uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds)
+        {
+            object[] parameters = { hHandle, dwMilliseconds };
+            var result = (uint)DynamicAPIInvoke("kernel32.dll", "WaitForSingleObject", typeof(Delegates.WaitForSingleObject), ref parameters);
+
+            return result;
+        }
+
         public static void CopyMemory(IntPtr destination, IntPtr source, uint length)
         {
             object[] parameters = { destination, source, length };
-            _ = DI.DynamicInvoke.Generic.DynamicAPIInvoke("kernel32.dll", "RtlCopyMemory", typeof(Delegates.CopyMemory), ref parameters);
+            _ = DynamicAPIInvoke("kernel32.dll", "RtlCopyMemory", typeof(Delegates.CopyMemory), ref parameters);
         }
 
         public static bool OpenClipboard(IntPtr hWndNewOwner)

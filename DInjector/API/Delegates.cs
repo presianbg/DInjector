@@ -211,6 +211,11 @@ namespace DInjector
             out uint lpflOldProtect);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate uint WaitForSingleObject(
+            IntPtr hHandle,
+            uint dwMilliseconds);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void CopyMemory(
             IntPtr destination,
             IntPtr source,
