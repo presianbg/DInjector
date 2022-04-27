@@ -7,9 +7,9 @@ namespace DInjector
 {
     class AES
     {
-        private byte[] key;
+        byte[] key;
 
-        private byte[] PerformCryptography(ICryptoTransform cryptoTransform, byte[] data)
+        byte[] PerformCryptography(ICryptoTransform cryptoTransform, byte[] data)
         {
             using (var memoryStream = new MemoryStream())
                 using (var cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))

@@ -202,7 +202,7 @@ namespace DInjector
 
             #region NtFreeVirtualMemory (allocModule)
 
-            regionSize = IntPtr.Zero;
+            regionSize = new IntPtr(bModuleName.Length + 2);
 
             ntstatus = Syscalls.NtFreeVirtualMemory(
                 hProcess,
@@ -219,7 +219,7 @@ namespace DInjector
 
             #region NtFreeVirtualMemory (allocShim)
 
-            regionSize = IntPtr.Zero;
+            regionSize = new IntPtr(shim.Length);
 
             ntstatus = Syscalls.NtFreeVirtualMemory(
                 hProcess,

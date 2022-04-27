@@ -38,11 +38,13 @@ namespace DInjector
 
             #region NtProtectVirtualMemory (PAGE_EXECUTE_READ)
 
+            IntPtr protectAddress = baseAddress;
+            regionSize = (IntPtr)shellcode.Length;
             uint oldProtect = 0;
 
             ntstatus = Syscalls.NtProtectVirtualMemory(
                 hProcess,
-                ref baseAddress,
+                ref protectAddress,
                 ref regionSize,
                 DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
                 ref oldProtect);
