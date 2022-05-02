@@ -37,7 +37,7 @@ Features:
 
 > **DISCLAIMER.** All information contained in this repository is provided for educational and research purposes only. The author is not responsible for any illegal use of this tool.
 
-## Usage
+## Basic Usage
 
 1. Compile the project in VS (or via [OffensivePipeline](https://github.com/snovvcrash/OffensivePipeline/releases/tag/v0.8.2)).
 2. Generate a shellcode of your choice:
@@ -49,7 +49,7 @@ Features:
 3. [Encrypt](encrypt.py) the shellcode:
 
 ```console
-~$ encrypt.py shellcode.bin -p 'Passw0rd!' -o enc
+~$ ./encrypt.py shellcode.bin -p 'Passw0rd!' -o enc
 ```
 
 4. Serve the encrypted shellcode:
@@ -60,7 +60,7 @@ Features:
 
 5. Use the PowerShell download [cradle](/cradle.ps1) to load DInjector.dll as `System.Reflection.Assembly` and execute it from memory.
 
-:warning: I **do not** recommend putting the assembly on disk because it will very likely be flagged.
+:warning: The assembly will very likely be flagged if put on disk.
 
 Global arguments:
 
@@ -88,7 +88,7 @@ In order to use DInjector from Cobalt Strike compile the project as a console ap
 
 ## Techniques
 
-:warning: OpSec safe considerations are based on my personal usage expirience and some testings along the way.
+:warning: OpSec safe considerations are based on my personal usage experience and some testings along the way.
 
 ### [FunctionPointer](/DInjector/Modules/FunctionPointer.cs)
 
@@ -170,11 +170,11 @@ references:
   - 'https://github.com/XingYun-Cloud/D-Invoke-syscall/blob/main/Program.cs'
 ```
 
-:information_source: Notes:
+:information_source: **Notes:**
 
-* When using 3rd-party loader-independent encoders which require R**W**X memory to decode the shellcode (like [sgn](https://github.com/EgeBalci/sgn), available via `--sgn` switch in [`encrypt.py`](encrypt.py)), you can use the `/protect` option to set **RWX** (PAGE_EXECUTE_READWRITE, `0x40`) value. Default protection value for the memory region where the shellcode resides is **RX** (PAGE_EXECUTE_READ, `0x20`).
+* When using 3rd-party loader-independent encoders which require R**W**X memory to decode the shellcode (like [sgn](https://github.com/EgeBalci/sgn), available via `--sgn` switch in [`encrypt.py`](encrypt.py)), you can use the `/protect` option to set **RWX** (PAGE_EXECUTE_READWRITE, `0x40`) value on the memory region where the shellcode resides. Default protection is **RX** (PAGE_EXECUTE_READ, `0x20`).
 * Some C2 implants (like meterpreter and [PoshC2](https://github.com/nettitude/PoshC2) but not Cobalt Strike, for example) allow to clean up the memory region where the initial shellcode was triggered from without terminating the active session. For that purpose the `/timeout` option exists: when its value is non-zero, the operator forces the `WaitForSingleObject` API call to time out initial shellcode execution in a specified number of milliseconds and then invoke the clean up routine to zero out the corresponding memory region and call `NtFreeVirtualMemory` on it.
-* If you want to set initial protection for the memory region where the shellcode as **NA** (PAGE_NOACCESS, `0x01`) to evade potential in-memory scan, use the `flipSleep` option to pause thread execution for a specified amount of milliseconds (same as in [RemoteThreadSuspended](#RemoteThreadSuspended)).
+* If you want to set initial protection for the memory region where the shellcode resides as **NA** (PAGE_NOACCESS, `0x01`) to evade potential in-memory scan, use the `flipSleep` option to pause thread execution for a specified amount of milliseconds (same as in [RemoteThreadSuspended](#RemoteThreadSuspended)).
 
 ### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs)
 
@@ -195,7 +195,7 @@ references:
   - 'https://github.com/ChoiSG/UuidShellcodeExec/blob/main/USEConsole/Program.cs'
 ```
 
-:information_source: Notes:
+:information_source: **Notes:**
 
 * This technique is appliable for small-[size](https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate) payloads.
 * Use `--uuid` switch in [`encrypt.py`](encrypt.py) to format the shellcode for this technique.
@@ -335,7 +335,7 @@ references:
   - 'https://captmeelo.com/redteam/maldev/2022/04/21/kernelcallbacktable-injection.html'
 ```
 
-:information_source: Notes:
+:information_source: **Notes:**
 
 * This technique requires a GUI process (e.g., notepad.exe) to inject into.
 * Based on my testings a large payload (e.g., stageless meterpreter) will not work with this technique.
@@ -372,7 +372,9 @@ references:
   - 'https://gist.github.com/jfmaes/944991c40fb34625cf72fd33df1682c0'
 ```
 
-:information_source: If there're spaces in the image path which you specify within the `/image` option, you should replace them with asterisks (`*`). Example: `C:\Program Files\Mozilla Firefox\firefox.exe` → `C:\Program*Files\Mozilla*Firefox\firefox.exe`.
+:information_source: **Notes:**
+
+* If there're spaces in the image path which you specify within the `/image` option, you should replace them with asterisks (`*`) characters. Example: `C:\Program Files\Mozilla Firefox\firefox.exe` → `C:\Program*Files\Mozilla*Firefox\firefox.exe`.
 
 ### [RemoteThreadContext](/DInjector/Modules/RemoteThreadAPC.cs)
 
