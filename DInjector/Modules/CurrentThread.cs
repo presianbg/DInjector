@@ -108,6 +108,8 @@ namespace DInjector
 
             if (flipSleep > 0)
             {
+                Console.WriteLine($"(CurrentThread) [=] Sleeping for {flipSleep} ms ...");
+
                 System.Threading.Thread.Sleep(flipSleep);
 
                 #region NtProtectVirtualMemory (protect)
@@ -193,22 +195,20 @@ namespace DInjector
 
                 #endregion
             }
-            else // serve forever
-            {
-                #region NtWaitForSingleObject
 
-                ntstatus = Syscalls.NtWaitForSingleObject(
-                    hThread,
-                    false,
-                    0);
+            #region NtWaitForSingleObject
 
-                if (ntstatus == NTSTATUS.Success)
-                    Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");
-                else
-                    throw new Exception($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
+            ntstatus = Syscalls.NtWaitForSingleObject(
+                hThread,
+                false,
+                0);
 
-                #endregion
-            }
+            if (ntstatus == NTSTATUS.Success)
+                Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");
+            else
+                throw new Exception($"(CurrentThread) [-] NtWaitForSingleObject: {ntstatus}");
+
+            #endregion
 
             Syscalls.NtClose(hThread);
         }

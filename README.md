@@ -28,6 +28,7 @@ Features:
 * Encrypted payloads which can be invoked from a URL or passed in base64 as an argument
 * Built-in AMSI bypass
 * [PPID Spoofing](https://www.ired.team/offensive-security/defense-evasion/parent-process-id-ppid-spoofing) and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch), write-up is [here](https://offensivedefence.co.uk/posts/ppidspoof-blockdlls-dinvoke/))
+* Flexible adjustment options for memory protection values
 * Simple sandbox detection & evasion
 * Prime numbers calculation to emulate sleep for in-memory scan evasion
 * Ntdll.dll unhooking
@@ -158,13 +159,15 @@ api:
   - dynamic_invocation:
     1: '[TIMEOUT] WaitForSingleObject'
   - syscalls:
-    1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
-    2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
+    1: 'NtAllocateVirtualMemory (allocProtect)'
+    2: 'NtProtectVirtualMemory (newProtect)'
     3: 'NtCreateThreadEx'
-    4: '[TIMEOUT] NtProtectVirtualMemory (oldProtect)'
-    5: '[TIMEOUT] NtFreeVirtualMemory (shellcode)'
-    6: 'NtWaitForSingleObject'
-    7: 'NtClose'
+    4: '[FLIPSLEEP] NtProtectVirtualMemory (protect)'
+    5: '[FLIPSLEEP] NtResumeThread'
+    6: '[TIMEOUT] NtProtectVirtualMemory (PAGE_READWRITE)'
+    7: '[TIMEOUT] NtFreeVirtualMemory (shellcode)'
+    8: 'NtWaitForSingleObject'
+    9: 'NtClose'
 opsec_safe: false
 references:
   - 'https://github.com/XingYun-Cloud/D-Invoke-syscall/blob/main/Program.cs'
@@ -444,8 +447,8 @@ references:
 module_name: 'modulestomping'
 arguments: |
   /image:C:\Windows\System32\svchost.exe
-  /stomp:xpsservices.dll
-  /export:DllCanUnloadNow
+  /stompDll:xpsservices.dll
+  /stompExport:DllCanUnloadNow
   /ppid:31337
   /blockDlls:True
 description: |

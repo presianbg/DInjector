@@ -116,6 +116,8 @@ namespace DInjector
 
             #region Thread.Sleep
 
+            Console.WriteLine($"(RemoteThreadSuspended) [=] Sleeping for {flipSleep} ms ...");
+
             System.Threading.Thread.Sleep(flipSleep);
 
             #endregion
