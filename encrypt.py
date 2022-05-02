@@ -3,6 +3,7 @@
 import os
 import uuid
 import hashlib
+from pathlib import Path
 from base64 import b64encode
 from argparse import ArgumentParser
 
@@ -55,13 +56,22 @@ def parse_args():
                                   help='convert the shellcode to UUID string before encrypting (used in "currentthreaduuid")')
 	parser.add_argument('--base64', action='store_true', default=False,
                                     help='print the output in base64')
+	parser.add_argument('--sgn', action='store_true', default=False,
+                                 help='use the sgn encoder (https://github.com/EgeBalci/sgn/releases)')
+	parser.add_argument('--sgn-path', action='store', type=str, default=Path(__file__).resolve().parent / '3rd-party' / 'sgn',
+                                 help='path to the sgn encoder (https://github.com/EgeBalci/sgn/releases)')
 	return parser.parse_args()
 
 
 if __name__ == '__main__':
 	args = parse_args()
 
-	with open(args.shellcode_bin, 'rb') as fd:
+	shellcode_bin = args.shellcode_bin
+	if args.sgn:
+		os.system(f'{args.sgn_path} -a 64 {args.shellcode_bin}')
+		shellcode_bin += '.sgn'
+
+	with open(shellcode_bin, 'rb') as fd:
 		shellcode = fd.read()
 
 	if args.uuid:
@@ -93,3 +103,6 @@ if __name__ == '__main__':
 		print(f'[+] Encrypted shellcode file: {args.output}')
 	elif args.base64:
 		print(enc).decode().strip()
+
+	if args.sgn:
+		os.remove(shellcode_bin)

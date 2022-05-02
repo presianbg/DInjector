@@ -8,7 +8,7 @@ namespace DInjector
 {
     class RemoteThreadSuspended
     {
-        public static void Execute(byte[] shellcode, int processID)
+        public static void Execute(byte[] shellcode, int processID, int flipSleep)
         {
             #region NtOpenProcess
 
@@ -116,7 +116,7 @@ namespace DInjector
 
             #region Thread.Sleep
 
-            System.Threading.Thread.Sleep(10000);
+            System.Threading.Thread.Sleep(flipSleep);
 
             #endregion
 

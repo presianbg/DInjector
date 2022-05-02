@@ -249,6 +249,11 @@ namespace DInjector
             int dwFlags);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate uint WaitForInputIdle(
+            IntPtr hProcess,
+            uint dwMilliseconds);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate IntPtr FindWindowExA(
             IntPtr parentHandle,
             IntPtr hWndChildAfter,

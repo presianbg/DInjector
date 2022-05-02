@@ -150,6 +150,14 @@ namespace DInjector
             return result;
         }
 
+        public static uint WaitForInputIdle(IntPtr hProcess, uint dwMilliseconds)
+        {
+            object[] parameters = { hProcess, dwMilliseconds };
+            var result = (uint)DynamicAPIInvoke("user32.dll", "WaitForInputIdle", typeof(Delegates.WaitForInputIdle), ref parameters);
+
+            return result;
+        }
+
         public static IntPtr FindWindowExA(IntPtr parentHandle, IntPtr hWndChildAfter, string className, string windowTitle)
         {
             object[] parameters = { parentHandle, hWndChildAfter, className, windowTitle };

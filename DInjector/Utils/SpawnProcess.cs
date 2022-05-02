@@ -85,6 +85,9 @@ namespace DInjector
             var flags = DI.Data.Win32.Kernel32.EXTENDED_STARTUPINFO_PRESENT;
             if (suspended) flags |= (uint)DI.Data.Win32.Advapi32.CREATION_FLAGS.CREATE_SUSPENDED;
 
+            if (processImage.IndexOf('*') > 0)
+                processImage = processImage.Replace('*', ' ');
+
             result = Win32.CreateProcessA(
                 processImage,
                 workingDirectory,

