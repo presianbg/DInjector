@@ -25,6 +25,7 @@ This repository is an accumulation of code snippets for various **shellcode inje
 Features:
 
 * Fully ported to D/Invoke API
+* Using [minified fork](https://github.com/snovvcrash/DInvoke/tree/minified) of [DInvoke](https://github.com/TheWover/DInvoke) rather than the original sources or [NuGet package](https://www.nuget.org/packages/DInvoke/)
 * Encrypted payloads which can be invoked from a URL or passed in base64 as an argument
 * Built-in AMSI bypass
 * [PPID Spoofing](https://www.ired.team/offensive-security/defense-evasion/parent-process-id-ppid-spoofing) and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch), write-up is [here](https://offensivedefence.co.uk/posts/ppidspoof-blockdlls-dinvoke/))
@@ -33,8 +34,6 @@ Features:
 * Prime numbers calculation to emulate sleep for in-memory scan evasion
 * Ntdll.dll unhooking
 * Cobalt Strike integration
-
-:information_source: Based on my testings the DInvoke NuGet [package](https://www.nuget.org/packages/DInvoke/) itself is being flagged by many commercial AV/EDR solutions when incuded as an embedded resource via [Costura.Fody](https://www.nuget.org/packages/Costura.Fody/) (or similar approaches), so I've [shrinked](https://github.com/snovvcrash/DInvoke/tree/dinjector) it a bit and included from [source](https://github.com/TheWover/DInvoke) to achieve better OpSec.
 
 > **DISCLAIMER.** All information contained in this repository is provided for educational and research purposes only. The author is not responsible for any illegal use of this tool.
 
@@ -154,7 +153,7 @@ arguments: |
   /flipSleep:10000
 description: |
   Injects shellcode into current process.
-  Thread execution via NtCreateThreadEx.
+  Thread execution via NtCreateThreadEx (& NtResumeThread).
 api:
   - dynamic_invocation:
     1: '[TIMEOUT] WaitForSingleObject'
@@ -177,7 +176,7 @@ references:
 
 * When using 3rd-party loader-independent encoders which require R**W**X memory to decode the shellcode (like [sgn](https://github.com/EgeBalci/sgn), available via `--sgn` switch in [`encrypt.py`](encrypt.py)), you can use the `/protect` option to set **RWX** (PAGE_EXECUTE_READWRITE, `0x40`) value on the memory region where the shellcode resides. Default protection is **RX** (PAGE_EXECUTE_READ, `0x20`).
 * Some C2 implants (like meterpreter and [PoshC2](https://github.com/nettitude/PoshC2) but not Cobalt Strike, for example) allow to clean up the memory region where the initial shellcode was triggered from without terminating the active session. For that purpose the `/timeout` option exists: when its value is non-zero, the operator forces the `WaitForSingleObject` API call to time out initial shellcode execution in a specified number of milliseconds and then invoke the clean up routine to zero out the corresponding memory region and call `NtFreeVirtualMemory` on it.
-* If you want to set initial protection for the memory region where the shellcode resides as **NA** (PAGE_NOACCESS, `0x01`) to evade potential in-memory scan, use the `flipSleep` option to pause thread execution for a specified amount of milliseconds (same as in [RemoteThreadSuspended](#RemoteThreadSuspended)).
+* If you want to set initial protection for the memory region where the shellcode resides as **NA** (PAGE_NOACCESS, `0x01`) to evade potential in-memory scan, use the `/flipSleep` option to delay thread execution for a specified amount of milliseconds (same as in [RemoteThreadSuspended](#RemoteThreadSuspended)).
 
 ### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs)
 
@@ -281,7 +280,7 @@ arguments: |
 description: |
   Injects shellcode into an existing remote process and flips memory protection to PAGE_NOACCESS.
   After a short sleep (waiting until a possible AV scan is finished) the protection is flipped again to PAGE_EXECUTE_READ.
-  Thread execution via NtCreateThreadEx.
+  Thread execution via NtCreateThreadEx & NtResumeThread.
 api:
   - syscalls:
     1: 'NtOpenProcess'
@@ -389,7 +388,7 @@ arguments: |
   /blockDlls:True
 description: |
   Injects shellcode into a newly spawned sacrifical remote process.
-  Thread execution via SetThreadContext.
+  Thread execution via SetThreadContext & NtResumeThread.
 api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
