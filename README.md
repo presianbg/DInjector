@@ -72,7 +72,7 @@ Global arguments:
 | `/am51`     | ❌        | `True` / `False`          | Applies AMSI bypass                                                |
 | `/unhook`   | ❌        | `True` / `False`          | Unhooks ntdll.dll                                                  |
 
-Test it locally:
+Test it locally with PowerShell:
 
 ```powershell
 $bytes = [System.IO.File]::ReadAllBytes("C:\DInjector.dll")
@@ -376,7 +376,7 @@ references:
 
 :information_source: **Notes:**
 
-* If there're spaces in the image path which you specify within the `/image` option, you should replace them with asterisks (`*`) characters. Example: `C:\Program Files\Mozilla Firefox\firefox.exe` → `C:\Program*Files\Mozilla*Firefox\firefox.exe`.
+* If there're spaces in the image path which you specify within the `/image` option, replace them with asterisk (`*`) characters. Example: `C:\Program Files\Mozilla Firefox\firefox.exe` → `C:\Program*Files\Mozilla*Firefox\firefox.exe`.
 
 ### [RemoteThreadContext](/DInjector/Modules/RemoteThreadAPC.cs)
 
