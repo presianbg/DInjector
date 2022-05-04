@@ -38,10 +38,10 @@ $F = "Passw0rd!"
 # [/protect] protection value that will be applied to the memory region where the shellcode resides ("RX" / "RWX", used in "currentthread")
 $G = "RX"
 
-# [/timeout] timeout for WaitForSingleObject in ms (0 is serve forever, used in "currentthread")
+# [/timeout] timeout for WaitForSingleObject in milliseconds (0 is serve forever, used in "currentthread")
 $H = 0
 
-# [/flipSleep] time to sleep with PAGE_NOACCESS on shellcode memory region before thread resuming in ms (0 is disable memory protection flip, used in "currentthread" and "remotethreadsuspended")
+# [/flipSleep] time to sleep with PAGE_NOACCESS on shellcode memory region before resuming the thread in milliseconds (0 is disable memory protection flip, used in "currentthread" and "remotethreadsuspended")
 $I = 0
 
 # [/image] path to the image of a newly spawned process to inject into (used in "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
@@ -63,13 +63,13 @@ $N = "xpsservices.dll"
 # [/stompExport] exported function name to overwrite (used in "modulestomping")
 $O = "DllCanUnloadNow"
 
-# [/sleep] number of seconds (approx.) to sleep before execution to evade potential in-memory scan (for values greater than "60" it will take much longer to sleep)
+# [/sleep] number of seconds (approx.) to sleep before execution to evade potential in-memory scan (10s-60s)
 $P = 0
 
 # [/blockDlls] block 3rd-party DLLs ("True" / "False", used in "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
 $Q = "True"
 
-# [/am51] bypass AMSI ("True" / "False")
+# [/am51] bypass AMSI for current process ("True" / "False")
 $R = "True"
 
 # [/unhook] unhook ntdll.dll ("True" / "False")

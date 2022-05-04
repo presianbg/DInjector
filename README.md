@@ -24,8 +24,7 @@ This repository is an accumulation of code snippets for various **shellcode inje
 
 Features:
 
-* Fully ported to D/Invoke API
-* Using [minified fork](https://github.com/snovvcrash/DInvoke/tree/minified) of [DInvoke](https://github.com/TheWover/DInvoke) rather than the original sources or [NuGet package](https://www.nuget.org/packages/DInvoke/)
+* Based entirely on D/Invoke API (using [minified fork](https://github.com/snovvcrash/DInvoke/tree/minified) of [DInvoke-dev](https://github.com/TheWover/DInvoke/tree/dev))
 * Encrypted payloads which can be invoked from a URL or passed in base64 as an argument
 * Built-in AMSI bypass
 * [PPID Spoofing](https://www.ired.team/offensive-security/defense-evasion/parent-process-id-ppid-spoofing) and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch), write-up is [here](https://offensivedefence.co.uk/posts/ppidspoof-blockdlls-dinvoke/))
@@ -60,17 +59,7 @@ Features:
 
 5. Use the PowerShell download [cradle](/cradle.ps1) to load DInjector.dll as `System.Reflection.Assembly` and execute it from memory.
 
-:warning: The assembly will very likely be flagged if put on disk.
-
-Global arguments:
-
-| Name        | Required | Example Values           | Description                                                        |
-|-------------|----------|--------------------------|--------------------------------------------------------------------|
-| `/sc`       | ✔️        | `http://10.10.13.37/enc` | Sets shellcode path (can be loaded from URL or as a base64 string) |
-| `/password` | ✔️        | `Passw0rd!`              | Sets password to decrypt the shellcode                             |
-| `/sleep`    | ❌        | `10`, `25`               | Sets number of seconds (approx.) to sleep before execution         |
-| `/am51`     | ❌        | `True` / `False`          | Applies AMSI bypass                                                |
-| `/unhook`   | ❌        | `True` / `False`          | Unhooks ntdll.dll                                                  |
+:warning: The assembly will very likely be flagged if put on disk!
 
 Test it locally with PowerShell:
 
@@ -85,6 +74,26 @@ $assem = [System.Reflection.Assembly]::Load($bytes)
 In order to use DInjector from Cobalt Strike compile the project as a console application and put the assembly next to the Aggressor script.
 
 ![cs](https://user-images.githubusercontent.com/23141800/158037009-2e9eaa9c-08ff-48ed-9f84-86b7345974d3.png)
+
+## Arguments
+
+| Name           | Techniques                                                                                   | Required | Default Value       | Example Values                                                                    | Description                                                                                                                                                   |
+|----------------|----------------------------------------------------------------------------------------------|----------|---------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/sc`          | All                                                                                          | YES      | -                   | `http://10.10.13.37/enc`                                                          | Sets shellcode path (can be loaded from URL or as a base64 string).                                                                                           |
+| `/password`    | All                                                                                          | YES      | -                   | `Passw0rd!`                                                                       | Sets password to decrypt the shellcode.                                                                                                                       |
+| `/protect`     | CurrentThread                                                                                | NO       | `RX`                | `RX` / `RWX`                                                                      | Sets memory protection for the shellcode.                                                                                                                     |
+| `/timeout`     | CurrentThread                                                                                | NO       | `0` (serve forever) | `5000`                                                                            | Sets timeout for WaitForSingleObject (ms).                                                                                                                    |
+| `/flipSleep`   | CurrentThread                                                                                | NO       | `0` (do NOT flip)   | `10000`                                                                           | Sets time to sleep with PAGE_NOACCESS on shellcode (ms).                                                                                                      |
+| `/image`       | RemoteThreadKernelCB, RemoteThreadAPC, RemoteThreadContext, ProcessHollowing, ModuleStomping | YES      | -                   | `C:\Windows\System32\svchost.exe`, `C:\Program*Files\Mozilla*Firefox\firefox.exe` | Sets path to the image of a newly spawned sacrifical process to inject into. If there're spaces in the image path, replace them with asterisk (*) characters. |
+| `/pid`         | RemoteThread, RemoteThreadDll, RemoteThreadView, RemoteThreadSuspended                       | YES      | -                   | `1337`                                                                            | Sets existing process ID to inject into.                                                                                                                      |
+| `/ppid`        | RemoteThreadKernelCB, RemoteThreadAPC, RemoteThreadContext, ProcessHollowing, ModuleStomping | NO       | `0`                 | `1337`                                                                            | Sets parent process ID to spoof the original value with.                                                                                                      |
+| `/dll`         | RemoteThreadDll                                                                              | YES      | -                   | `msvcp_win.dll`                                                                   | Sets loaded DLL name to overwrite its .text section for storing the shellcode.                                                                                |
+| `/stompDll`    | ModuleStomping                                                                               | YES      | -                   | `xpsservices.dll`                                                                 | Sets name of the DLL to stomp.                                                                                                                                |
+| `/stompExport` | ModuleStomping                                                                               | YES      | -                   | `DllCanUnloadNow`                                                                 | Sets exported function name to overwrite.                                                                                                                     |
+| `/sleep`       | All                                                                                          | NO       | `0`                 | `30`                                                                              | Sets number of seconds (approx.) to sleep before execution (10s-60s).                                                                                         |
+| `/blockDlls`   | RemoteThreadKernelCB, RemoteThreadAPC, RemoteThreadContext, ProcessHollowing, ModuleStomping | NO       | `False`             | `True` / `False`                                                                  | Blocks 3rd-party (non-Microsoft) DLLs.                                                                                                                        |
+| `/am51`        | All                                                                                          | NO       | `False`             | `True` / `False`                                                                  | Applies AMSI bypass for current process.                                                                                                                      |
+| `/unhook`      | All                                                                                          | NO       | `False`             | `True` / `False`                                                                  | Unhooks ntdll.dll (loads a clean copy from disk).                                                                                                             |
 
 ## Techniques
 
@@ -373,10 +382,6 @@ references:
   - 'https://rastamouse.me/exploring-process-injection-opsec-part-2/'
   - 'https://gist.github.com/jfmaes/944991c40fb34625cf72fd33df1682c0'
 ```
-
-:information_source: **Notes:**
-
-* If there're spaces in the image path which you specify within the `/image` option, replace them with asterisk (`*`) characters. Example: `C:\Program Files\Mozilla Firefox\firefox.exe` → `C:\Program*Files\Mozilla*Firefox\firefox.exe`.
 
 ### [RemoteThreadContext](/DInjector/Modules/RemoteThreadAPC.cs)
 

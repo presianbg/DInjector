@@ -157,19 +157,19 @@ popup beacon_bottom {
                                                                       "ProcessHollowing",
                                                                       "ModuleStomping"));
 
-        drow_text($dialog, "protect",     "Memory protection of the shellcode (0x20 / 0x40):");
+        drow_text($dialog, "protect",     "Memory protection for the shellcode (RX / RWX):");
         drow_text($dialog, "timeout",     "Timeout for WaitForSingleObject in ms (0 is serve forever):");
         drow_text($dialog, "flipSleep",   "Time to sleep with PAGE_NOACCESS on shellcode in ms (0 disabled):");
-        drow_text($dialog, "image",       "Path to the image of a newly spawned process to inject into:");
+        drow_text($dialog, "image",       "Path to the image of a newly spawned sacrifical process to inject into:");
         drow_text($dialog, "pid",         "Existing process ID to inject into:");
         drow_text($dialog, "ppid",        "Parent process ID to spoof the original value with:");
         drow_text($dialog, "dll",         "Loaded DLL name to overwrite its .text section for storing the shellcode:");
         drow_text($dialog, "stompDll",    "Name of the DLL to stomp:");
         drow_text($dialog, "stompExport", "Exported function name to overwrite:");
-        drow_text($dialog, "sleep",       "Sleep:", "number of seconds (approx.) to sleep before execution (10s-60s)");
+        drow_text($dialog, "sleep",       "Number of seconds (approx.) to sleep before execution (10s-60s)");
 
         drow_checkbox($dialog, "blockDlls", "DLLs:",   "Block 3rd-party DLLs");
-        drow_checkbox($dialog, "am51",      "AMSI:",   "Bypass AMSI");
+        drow_checkbox($dialog, "am51",      "AMSI:",   "Bypass AMSI for current process");
         drow_checkbox($dialog, "unhook",    "Unhook:", "Unhook ntdll.dll");
 
         dbutton_action($dialog, "Inject");
