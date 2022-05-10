@@ -111,7 +111,7 @@ namespace DInjector
                     commandName = item.Key;
 
             var shellcodePath = options["/sc"];
-            var password = options["/password"];
+            var password = options["/p"];
 
             byte[] shellcodeEncrypted;
             if (shellcodePath.StartsWith("http", ignoreCase: true, culture: new CultureInfo("en-US")))
