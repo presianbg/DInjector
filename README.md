@@ -36,6 +36,30 @@ Features:
 
 > **DISCLAIMER.** All information contained in this repository is provided for educational and research purposes only. The author is not responsible for any illegal use of this tool.
 
+## Table of Contents
+
+- [DInjector](#dinjector)
+  * [Table of Contents](#table-of-contents)
+  * [Basic Usage](#basic-usage)
+  * [Cobalt Strike Integration](#cobalt-strike-integration)
+  * [Arguments](#arguments)
+  * [Techniques](#techniques)
+    + [FunctionPointer](#functionpointer)
+    + [FunctionPointerUnsafe](#functionpointerunsafe)
+    + [ClipboardPointer](#clipboardpointer)
+    + [CurrentThread](#currentthread)
+    + [CurrentThreadUuid](#currentthreaduuid)
+    + [RemoteThread](#remotethread)
+    + [RemoteThreadDll](#remotethreaddll)
+    + [RemoteThreadView](#remotethreadview)
+    + [RemoteThreadSuspended](#remotethreadsuspended)
+    + [RemoteThreadKernelCB](#remotethreadkernelcb)
+    + [RemoteThreadAPC](#remotethreadapc)
+    + [RemoteThreadContext](#remotethreadcontext)
+    + [ProcessHollowing](#processhollowing)
+    + [ModuleStomping](#modulestomping)
+  * [Credits](#credits)
+
 ## Basic Usage
 
 1. Compile the project in VS (or via [OffensivePipeline](https://github.com/snovvcrash/OffensivePipeline/releases/tag/v0.8.2)).
