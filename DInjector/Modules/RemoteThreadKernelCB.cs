@@ -20,10 +20,10 @@ namespace DInjector
                 ppid: ppid,
                 blockDlls: blockDlls);
 
-            #endregion
-
             IntPtr hProcess = pi.hProcess;
             _ = Win32.WaitForInputIdle(hProcess, 2000);
+
+            #endregion
 
             #region NtQueryInformationProcess
 

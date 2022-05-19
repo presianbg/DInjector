@@ -27,7 +27,7 @@ Features:
 * Based entirely on D/Invoke API (using [minified fork](https://github.com/snovvcrash/DInvoke/tree/minified) of [DInvoke-dev](https://github.com/TheWover/DInvoke/tree/dev))
 * Encrypted payloads which can be invoked from a URL or passed in base64 as an argument
 * Built-in AMSI bypass
-* [PPID Spoofing](https://www.ired.team/offensive-security/defense-evasion/parent-process-id-ppid-spoofing) and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch), write-up is [here](https://offensivedefence.co.uk/posts/ppidspoof-blockdlls-dinvoke/))
+* [PPID Spoofing](https://www.ired.team/offensive-security/defense-evasion/parent-process-id-ppid-spoofing) and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch))
 * Flexible adjustment options for memory protection values
 * Simple sandbox detection & evasion
 * Prime numbers calculation to emulate sleep for in-memory scan evasion
@@ -116,7 +116,8 @@ In order to use DInjector from Cobalt Strike compile the project as a console ap
 | `/stompExport` | ModuleStomping                                                                               | YES      | -                   | `DllCanUnloadNow`                                                                 | Sets exported function name to overwrite.                                                                                                                     |
 | `/sleep`       | All                                                                                          | NO       | `0`                 | `30`                                                                              | Sets number of seconds (approx.) to sleep before execution (10s-60s).                                                                                         |
 | `/blockDlls`   | RemoteThreadKernelCB, RemoteThreadAPC, RemoteThreadContext, ProcessHollowing, ModuleStomping | NO       | `False`             | `True` / `False`                                                                  | Blocks 3rd-party (non-Microsoft) DLLs.                                                                                                                        |
-| `/am51`        | All                                                                                          | NO       | `False`             | `True` / `False`                                                                  | Applies AMSI bypass for current process.                                                                                                                      |
+| `/am51`        | All                                                                                          | NO       | `False`             | `True` / `False`                                                                  | Applies AMSI bypass in current process.                                                                                                                       |
+| `/remoteAm51`  | RemoteThread, RemoteThreadDll, RemoteThreadView, RemoteThreadSuspended                       | NO       | `False`             | `True` / `False`                                                                  | Applies AMSI bypass in remote (sacrifical) process.                                                                                                           |
 | `/unhook`      | All                                                                                          | NO       | `False`             | `True` / `False`                                                                  | Unhooks ntdll.dll (loads a clean copy from disk).                                                                                                             |
 
 ## Techniques
@@ -131,6 +132,7 @@ arguments:
 description: |
   Allocates a RW memory region, copies the shellcode into it and executes it like a function.
 api:
+  - dynamic_invocation:
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
     2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
@@ -149,6 +151,7 @@ arguments:
 description: |
   Sets RX on a byte array (treated as an unsafe pointer) and executes it like a function.
 api:
+  - dynamic_invocation:
   - syscalls:
     1: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
 opsec_safe: false
@@ -224,6 +227,7 @@ api:
     1: 'HeapCreate'
     2: 'UuidFromStringA'
     3: 'EnumSystemLocalesA'
+  - syscalls:
 opsec_safe: false
 references:
   - 'https://blog.sunggwanchoi.com/eng-uuid-shellcode-execution/'
@@ -245,6 +249,7 @@ description: |
   Injects shellcode into an existing remote process.
   Thread execution via NtCreateThreadEx.
 api:
+  - dynamic_invocation:
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
@@ -268,6 +273,7 @@ description: |
   Injects shellcode into an existing remote process overwriting one of its loaded modules' .text section.
   Thread execution via NtCreateThreadEx.
 api:
+  - dynamic_invocation:
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtWriteVirtualMemory (shellcode)'
@@ -315,6 +321,7 @@ description: |
   After a short sleep (waiting until a possible AV scan is finished) the protection is flipped again to PAGE_EXECUTE_READ.
   Thread execution via NtCreateThreadEx & NtResumeThread.
 api:
+  - dynamic_invocation:
   - syscalls:
     1: 'NtOpenProcess'
     2: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
@@ -344,8 +351,8 @@ description: |
 api:
   - dynamic_invocation:
      1: 'InitializeProcThreadAttributeList'
-     2: 'UpdateProcThreadAttribute (blockDLLs)'
-     3: 'UpdateProcThreadAttribute (PPID)'
+     2: '[BLOCKDLLS] UpdateProcThreadAttribute'
+     3: '[PPID] UpdateProcThreadAttribute'
      4: 'CreateProcessA'
      5: 'WaitForInputIdle'
      6: 'FindWindowExA'
@@ -390,8 +397,8 @@ description: |
 api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
-    2: 'UpdateProcThreadAttribute (blockDLLs)'
-    3: 'UpdateProcThreadAttribute (PPID)'
+    2: '[BLOCKDLLS] UpdateProcThreadAttribute'
+    3: '[PPID] UpdateProcThreadAttribute'
     4: 'CreateProcessA'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
@@ -421,8 +428,8 @@ description: |
 api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
-    2: 'UpdateProcThreadAttribute (blockDLLs)'
-    3: 'UpdateProcThreadAttribute (PPID)'
+    2: '[BLOCKDLLS] UpdateProcThreadAttribute'
+    3: '[PPID] UpdateProcThreadAttribute'
     4: 'CreateProcessA'
   - syscalls:
     1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
@@ -453,8 +460,8 @@ description: |
 api:
   - dynamic_invocation:
     1: 'InitializeProcThreadAttributeList'
-    2: 'UpdateProcThreadAttribute (blockDLLs)'
-    3: 'UpdateProcThreadAttribute (PPID)'
+    2: '[BLOCKDLLS] UpdateProcThreadAttribute'
+    3: '[PPID] UpdateProcThreadAttribute'
     4: 'CreateProcessA'
   - syscalls:
     1: 'NtQueryInformationProcess'
@@ -485,8 +492,8 @@ description: |
 api:
   - dynamic_invocation:
      1: 'InitializeProcThreadAttributeList'
-     2: 'UpdateProcThreadAttribute (blockDLLs)'
-     3: 'UpdateProcThreadAttribute (PPID)'
+     2: '[BLOCKDLLS] UpdateProcThreadAttribute'
+     3: '[PPID] UpdateProcThreadAttribute'
      4: 'CreateProcessA'
   - syscalls:
      1: 'NtAllocateVirtualMemory (bModuleName, PAGE_READWRITE)'
@@ -507,6 +514,59 @@ opsec_safe: true
 references:
   - 'https://offensivedefence.co.uk/posts/module-stomping/'
   - 'https://github.com/rasta-mouse/TikiTorch/blob/master/TikiLoader/Stomper.cs'
+```
+
+### Utils
+
+#### [AM51](/DInjector/Utils/AM51.cs)
+
+```yaml
+module_name:
+arguments:
+description:
+api:
+  - dynamic_invocation:
+  - syscalls:
+    1: 'NtProtectVirtualMemory (PAGE_READWRITE)'
+    2: '[REMOTEAM51] NtWriteVirtualMemory (patch)'
+    3: 'NtProtectVirtualMemory (oldProtect)'
+opsec_safe:
+references:
+```
+
+#### [SpawnProcess](/DInjector/Utils/SpawnProcess.cs)
+
+```yaml
+module_name:
+arguments:
+description:
+api:
+  - dynamic_invocation:
+    1: 'InitializeProcThreadAttributeList'
+    2: '[BLOCKDLLS] UpdateProcThreadAttribute'
+    3: '[PPID] UpdateProcThreadAttribute'
+    4: 'CreateProcessA'
+  - syscalls:
+opsec_safe:
+references:
+  - 'https://offensivedefence.co.uk/posts/ppidspoof-blockdlls-dinvoke/'
+```
+
+#### [Unhooker](/DInjector/Utils/Unhooker.cs)
+
+```yaml
+module_name:
+arguments:
+description:
+api:
+  - dynamic_invocation:
+    1: 'VirtualProtect (PAGE_EXECUTE_READWRITE)'
+    2: 'CopyMemory'
+    3: 'VirtualProtect (oldProtect)'
+  - syscalls:
+opsec_safe:
+references:
+  - 'https://github.com/TheWover/DInvoke/blob/0530886deebd1a2e5bd8b9eb8e1d8ce87f4ca5e4/DInvoke/DInvoke/DynamicInvoke/Generic.cs'
 ```
 
 ## Credits

