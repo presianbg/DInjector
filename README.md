@@ -572,4 +572,4 @@ references:
 ## Credits
 
 * [@TheWover](https://twitter.com/therealwover) and [@FuzzySecurity](https://twitter.com/fuzzysec) for their awesome [DInvoke](https://github.com/TheWover/DInvoke) project.
-* All those great researchers mentioned in the modules references above.
+* All those great researchers mentioned in technique references above.
