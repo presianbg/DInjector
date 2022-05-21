@@ -114,7 +114,7 @@ $detonator > .\Detonator.cs
 
 3. Compile the assembly and put it next to the Aggressor script.
 
-![cs](https://user-images.githubusercontent.com/23141800/169655363-33e6fa0a-6f7d-4ea6-a253-e4c65c594996.png)
+![cs](https://user-images.githubusercontent.com/23141800/169656256-143f6cfa-0a33-4869-9bce-f7b1d58686e2.png)
 
 ## Arguments
 
