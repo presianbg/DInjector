@@ -69,10 +69,10 @@ $P = 0
 # [/blockDlls] block 3rd-party DLLs ("True" / "False", used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
 $Q = "True"
 
-# [/am51] bypass AMSI for current process ("True" / "False")
+# [/am51] bypass AMSI for current process ("True" / "False" / "Force")
 $R = "True"
 
-# [/remoteAm51] bypass AMSI for remote process ("True" / "False", used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
+# [/remoteAm51] bypass AMSI for remote process ("True" / "False" / "Force", used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping", "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
 $S = "True"
 
 # [/unhook] unhook ntdll.dll ("True" / "False")

