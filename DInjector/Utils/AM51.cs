@@ -17,7 +17,7 @@ namespace DInjector
         // xor rax, rax
         //static readonly byte[] x64 = new byte[] { 0x48, 0x31, 0xC0 };
 
-        public static void Patch(IntPtr processHandle = default(IntPtr), int processID = 0, bool force = true)
+        public static void Patch(IntPtr processHandle = default(IntPtr), int processID = 0, bool force = false)
         {
             ChangeBytes(x64, processHandle, processID, force);
         }

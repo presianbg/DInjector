@@ -127,8 +127,8 @@ popup beacon_bottom {
         %options["stompExport"] = "DllCanUnloadNow";
         %options["blockDlls"]   = "true";
         %options["sleep"]       = "0";
-        %options["am51"]        = "Force";
-        %options["remoteAm51"]  = "Force";
+        %options["am51"]        = "True";
+        %options["remoteAm51"]  = "True";
         %options["unhook"]      = "false";
 
         # Create a dialog

@@ -58,6 +58,10 @@ Features:
     + [RemoteThreadContext](#remotethreadcontext)
     + [ProcessHollowing](#processhollowing)
     + [ModuleStomping](#modulestomping)
+    + [Utils](#utils)
+      - [AM51](#am51)
+      - [SpawnProcess](#spawnprocess)
+      - [Unhooker](#unhooker)
   * [Credits](#credits)
 
 ## Basic Usage
@@ -110,7 +114,7 @@ $detonator > .\Detonator.cs
 
 3. Compile the assembly and put it next to the Aggressor script.
 
-![cs](https://user-images.githubusercontent.com/23141800/169651946-bfa6054a-bf14-40f4-b392-867ed984d32e.png)
+![cs](https://user-images.githubusercontent.com/23141800/169655363-33e6fa0a-6f7d-4ea6-a253-e4c65c594996.png)
 
 ## Arguments
 
@@ -358,7 +362,7 @@ arguments: |
   /image:C:\Windows\System32\notepad.exe
   /ppid:31337
   /blockDlls:True
-  /remoteAm51:Force
+  /remoteAm51:True
 description: |
   Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via SendMessageA.
@@ -401,7 +405,7 @@ arguments: |
   /image:C:\Windows\System32\svchost.exe
   /ppid:31337
   /blockDlls:True
-  /remoteAm51:Force
+  /remoteAm51:True
 description: |
   Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via NtQueueApcThread.
@@ -429,7 +433,7 @@ arguments: |
   /image:C:\Windows\System32\svchost.exe
   /ppid:31337
   /blockDlls:True
-  /remoteAm51:Force
+  /remoteAm51:True
 description: |
   Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via SetThreadContext & NtResumeThread.
@@ -458,7 +462,7 @@ arguments: |
   /image:C:\Windows\System32\svchost.exe
   /ppid:31337
   /blockDlls:True
-  /remoteAm51:Force
+  /remoteAm51:True
 description: |
   Injects shellcode into a newly spawned sacrifical remote process.
   Thread execution via NtResumeThread (hollowing with shellcode).
@@ -487,7 +491,7 @@ arguments: |
   /stompExport:DllCanUnloadNow
   /ppid:31337
   /blockDlls:True
-  /remoteAm51:Force
+  /remoteAm51:True
 description: |
   Loads a trusted module from disk and overwrites one of its exported functions.
   Thread execution via NtCreateThreadEx.
