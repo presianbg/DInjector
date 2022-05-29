@@ -8,9 +8,6 @@ namespace DInjector
 {
     class TimeFormats
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        delegate void pFunction();
-
         public static void Execute(byte[] shellcode)
         {
             #region NtAllocateVirtualMemory (PAGE_READWRITE)
