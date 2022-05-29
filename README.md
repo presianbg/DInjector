@@ -46,6 +46,7 @@ Features:
   * [Techniques](#techniques)
     + [FunctionPointer](#functionpointer)
     + [FunctionPointerUnsafe](#functionpointerunsafe)
+    + [TimeFormats](#timeformats)
     + [ClipboardPointer](#clipboardpointer)
     + [CurrentThread](#currentthread)
     + [CurrentThreadUuid](#currentthreaduuid)
@@ -147,7 +148,7 @@ $detonator > .\Detonator.cs
 module_name: 'functionpointer'
 arguments:
 description: |
-  Allocates a RW memory region, copies the shellcode into it and executes it like a function.
+  Allocates a memory region, copies the shellcode into it and executes it like a function.
 api:
   - dynamic_invocation:
   - syscalls:
@@ -175,6 +176,25 @@ opsec_safe: false
 references:
   - 'https://jhalon.github.io/utilizing-syscalls-in-csharp-2/'
   - 'https://github.com/jhalon/SharpCall/blob/master/Syscalls.cs'
+```
+
+### [TimeFormats](/DInjector/Modules/TimeFormats.cs)
+
+```yaml
+module_name: 'timeformats'
+arguments:
+description: |
+  Allocates a memory region, copies the shellcode into it and executes EnumTimeFormatsEx against it.
+  The memory region address is treated as a TIMEFMT_ENUMPROCEX callback function.
+api:
+  - dynamic_invocation:
+    1: 'EnumTimeFormatsEx'
+  - syscalls:
+    1: 'NtAllocateVirtualMemory (PAGE_READWRITE)'
+    2: 'NtProtectVirtualMemory (PAGE_EXECUTE_READ)'
+opsec_safe:
+references:
+  - 'https://github.com/ReversingID/Shellcode-Loader/blob/master/windows/execution/callback/EnumTimeFormatsEx/c++/code.cpp'
 ```
 
 ### [ClipboardPointer](/DInjector/Modules/ClipboardPointer.cs)

@@ -249,6 +249,13 @@ namespace DInjector
             int dwFlags);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate bool EnumTimeFormatsEx(
+            IntPtr lpTimeFmtEnumProcEx,
+            IntPtr lpLocaleName,
+            uint dwFlags,
+            uint lParam);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate uint WaitForInputIdle(
             IntPtr hProcess,
             uint dwMilliseconds);

@@ -145,6 +145,7 @@ popup beacon_bottom {
 
         drow_combobox($dialog, "technique", "Injection technique:", @("FunctionPointer",
                                                                       "FunctionPointerUnsafe",
+                                                                      "TimeFormats",
                                                                       "ClipboardPointer",
                                                                       "CurrentThread",
                                                                       "CurrentThreadUuid",

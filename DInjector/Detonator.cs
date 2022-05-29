@@ -190,6 +190,10 @@ namespace DInjector
                         ClipboardPointer.Execute(shellcodeBytes);
                         break;
 
+                    case "timeformats":
+                        TimeFormats.Execute(shellcodeBytes);
+                        break;
+
                     case "currentthread":
                         string strProtect = "RX";
                         try

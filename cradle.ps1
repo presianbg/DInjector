@@ -5,6 +5,7 @@ Module name. Choose from:
   
   "functionpointer",
   "functionpointerunsafe",
+  "timeformats",
   "clipboardpointer",
   "currentthread",
   "currentthreaduuid",

@@ -150,6 +150,14 @@ namespace DInjector
             return result;
         }
 
+        public static bool EnumTimeFormatsEx(IntPtr lpTimeFmtEnumProcEx, IntPtr lpLocaleName, uint dwFlags, uint lParam)
+        {
+            object[] parameters = { lpTimeFmtEnumProcEx, lpLocaleName, dwFlags, lParam };
+            var result = (bool)DynamicAPIInvoke("kernel32.dll", "EnumTimeFormatsEx", typeof(Delegates.EnumTimeFormatsEx), ref parameters);
+
+            return result;
+        }
+
         public static uint WaitForInputIdle(IntPtr hProcess, uint dwMilliseconds)
         {
             object[] parameters = { hProcess, dwMilliseconds };

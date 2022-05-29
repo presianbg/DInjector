@@ -78,6 +78,7 @@
     <Compile Include="Modules\ClipboardPointer.cs" />
     <Compile Include="Modules\CurrentThreadUuid.cs" />
     <Compile Include="Modules\CurrentThread.cs" />
+    <Compile Include="Modules\TimeFormats.cs" />
     <Compile Include="Modules\FunctionPointer.cs" />
     <Compile Include="Modules\FunctionPointerUnsafe.cs" />
     <Compile Include="Modules\ModuleStomping.cs" />
