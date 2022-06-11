@@ -286,7 +286,7 @@ references:
 **Shellcode Fluctuation Demo**
 
 <p align="center">
-  <a href="https://vimeo.com/719398239"><img src="https://user-images.githubusercontent.com/23141800/173198600-7c878e2b-8ba9-4b6a-ae9f-16cfa8a2c83f.png" width="950px" alt="shellcode-fluctuation-demo" /></a>
+  <a href="https://vimeo.com/719398239"><img src="https://user-images.githubusercontent.com/23141800/173198600-7c878e2b-8ba9-4b6a-ae9f-16cfa8a2c83f.png" width="800px" alt="shellcode-fluctuation-demo" /></a>
 </p>
 
 ### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs)
