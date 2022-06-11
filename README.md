@@ -283,7 +283,7 @@ references:
 * If you want to set initial protection for the memory region where the shellcode resides as **NA** (PAGE_NOACCESS, `0x01`) to evade potential in-memory scan, use the `/flipSleep` option to delay thread execution for a specified amount of milliseconds (same as in [RemoteThreadSuspended](#RemoteThreadSuspended)).
 * Using the `/fluctuate` option you can instruct the loader to hook `kernel32.dll!Sleep` function and flip the shellcode memory region to `RW` and obfuscate it via XOR encryption to evade in-memory scans hunting for known implant signatures. Heavily adopted from [ShellcodeFluctuation](https://github.com/mgeeky/ShellcodeFluctuation) PoC.
 
-![shellcode-fluctuation-demo](https://vimeo.com/719398239)
+[![shellcode-fluctuation-demo](https://user-images.githubusercontent.com/23141800/173198600-7c878e2b-8ba9-4b6a-ae9f-16cfa8a2c83f.png)](https://vimeo.com/719398239)
 
 ### [CurrentThreadUuid](/DInjector/Modules/CurrentThreadUuid.cs)
 
