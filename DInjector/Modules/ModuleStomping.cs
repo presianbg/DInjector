@@ -10,7 +10,7 @@ using static DInvoke.Data.Native;
 namespace DInjector
 {
     /// <summary>
-    /// Based on:
+    /// Stolen from:
     /// https://offensivedefence.co.uk/posts/module-stomping/
     /// https://github.com/rasta-mouse/TikiTorch/blob/master/TikiLoader/Stomper.cs
     /// </summary>

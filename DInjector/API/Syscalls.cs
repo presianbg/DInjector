@@ -142,6 +142,23 @@ namespace DInjector
                 freeType);
         }
 
+        public static NTSTATUS NtFlushInstructionCache(IntPtr ProcessHandle, ref IntPtr BaseAddress, uint NumberOfBytesToFlush)
+        {
+            IntPtr stub = GetSyscallStub("ZwFlushInstructionCache");
+            Delegates.NtFlushInstructionCache ntFlushInstructionCache = (Delegates.NtFlushInstructionCache)Marshal.GetDelegateForFunctionPointer(stub, typeof(Delegates.NtFlushInstructionCache));
+
+            if (ProcessHandle == IntPtr.Zero)
+                return ntFlushInstructionCache(
+                    Process.GetCurrentProcess().Handle,
+                    ref BaseAddress,
+                    NumberOfBytesToFlush);
+
+            return ntFlushInstructionCache(
+                ProcessHandle,
+                ref BaseAddress,
+                NumberOfBytesToFlush);
+        }
+
         public static NTSTATUS NtQueryInformationProcess(IntPtr ProcessHandle, PROCESSINFOCLASS ProcessInformationClass, ref PROCESS_BASIC_INFORMATION ProcessInformation, uint ProcessInformationLength, ref uint ReturnLength)
         {
             IntPtr stub = GetSyscallStub("ZwQueryInformationProcess");

