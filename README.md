@@ -28,7 +28,7 @@ Features:
 * Encrypted payloads which can be invoked from a URL or passed in base64 as an argument
 * PPID Spoofing and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch))
 * Flexible adjustment options for memory protection values
-* Shellcode fluctuation with `RW` and obfuscation for in-memory scan evasion (heavily adopted from [ShellcodeFluctuation](https://github.com/mgeeky/ShellcodeFluctuation)).
+* Shellcode fluctuation with **RW** and memory obfuscation (adopted from [ShellcodeFluctuation](https://github.com/mgeeky/ShellcodeFluctuation))
 * Built-in AMSI bypass for local and remote processes, amsi.dll can be optionally force loaded
 * Simple sandbox detection & evasion
 * Prime numbers calculation to emulate sleep for in-memory scan evasion
