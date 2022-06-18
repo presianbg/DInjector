@@ -4,7 +4,7 @@ namespace DInjector
 {
     class CurrentThreadUuid
     {
-        public static void Execute(string shellcode)
+        public static void Execute(string shellcode, bool debug = false)
         {
             #region HeapCreate
 

@@ -8,7 +8,7 @@ namespace DInjector
 {
     class ProcessHollowing
     {
-        public static void Execute(byte[] shellcode, string processImage, int ppid = 0, bool blockDlls = false, bool am51 = false)
+        public static void Execute(byte[] shellcode, string processImage, int ppid = 0, bool blockDlls = false, bool am51 = false, bool debug = false)
         {
             #region CreateProcessA
 

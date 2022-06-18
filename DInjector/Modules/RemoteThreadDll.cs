@@ -9,7 +9,7 @@ namespace DInjector
 {
     class RemoteThreadDll
     {
-        public static void Execute(byte[] shellcode, int processID, string moduleName, bool remoteAm51, bool forceAm51)
+        public static void Execute(byte[] shellcode, int processID, string moduleName, bool remoteAm51, bool forceAm51, bool debug = false)
         {
             #region NtOpenProcess
 

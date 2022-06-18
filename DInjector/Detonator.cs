@@ -174,24 +174,41 @@ namespace DInjector
             catch (Exception)
             { }
 
+            var debug = false;
+            try
+            {
+                if (bool.Parse(options["/debug"]))
+                    debug = true;
+            }
+            catch (Exception)
+            { }
+
             try
             {
                 switch (commandName.ToLower())
                 {
                     case "functionpointer":
-                        FunctionPointer.Execute(shellcodeBytes);
+                        FunctionPointer.Execute(
+                            shellcodeBytes,
+                            debug);
                         break;
 
                     case "functionpointerunsafe":
-                        FunctionPointerUnsafe.Execute(shellcodeBytes);
+                        FunctionPointerUnsafe.Execute(
+                            shellcodeBytes,
+                            debug);
                         break;
 
                     case "clipboardpointer":
-                        ClipboardPointer.Execute(shellcodeBytes);
+                        ClipboardPointer.Execute(
+                            shellcodeBytes,
+                            debug);
                         break;
 
                     case "timeformats":
-                        TimeFormats.Execute(shellcodeBytes);
+                        TimeFormats.Execute(
+                            shellcodeBytes,
+                            debug);
                         break;
 
                     case "currentthread":
@@ -236,7 +253,8 @@ namespace DInjector
                             protect,
                             timeout,
                             flipSleep,
-                            fluctuate);
+                            fluctuate,
+                            debug);
                         break;
 
                     case "currentthreaduuid":
@@ -249,7 +267,8 @@ namespace DInjector
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
                             remoteAm51,
-                            forceRemoteAm51);
+                            forceRemoteAm51,
+                            debug);
                         break;
 
                     case "remotethreaddll":
@@ -258,7 +277,8 @@ namespace DInjector
                             int.Parse(options["/pid"]),
                             options["/dll"],
                             remoteAm51,
-                            forceRemoteAm51);
+                            forceRemoteAm51,
+                            debug);
                         break;
 
                     case "remotethreadview":
@@ -266,7 +286,8 @@ namespace DInjector
                             shellcodeBytes,
                             int.Parse(options["/pid"]),
                             remoteAm51,
-                            forceRemoteAm51);
+                            forceRemoteAm51,
+                            debug);
                         break;
 
                     case "remotethreadsuspended":
@@ -281,7 +302,8 @@ namespace DInjector
                             int.Parse(options["/pid"]),
                             flipSleep,
                             remoteAm51,
-                            forceRemoteAm51);
+                            forceRemoteAm51,
+                            debug);
                         break;
 
                     case "remotethreadkernelcb":
@@ -290,7 +312,8 @@ namespace DInjector
                             options["/image"],
                             ppid,
                             blockDlls,
-                            remoteAm51);
+                            remoteAm51,
+                            debug);
                         break;
 
                     case "remotethreadapc":
@@ -299,7 +322,8 @@ namespace DInjector
                             options["/image"],
                             ppid,
                             blockDlls,
-                            remoteAm51);
+                            remoteAm51,
+                            debug);
                         break;
 
                     case "remotethreadcontext":
@@ -308,7 +332,8 @@ namespace DInjector
                             options["/image"],
                             ppid,
                             blockDlls,
-                            remoteAm51);
+                            remoteAm51,
+                            debug);
                         break;
 
                     case "processhollowing":
@@ -317,7 +342,8 @@ namespace DInjector
                             options["/image"],
                             ppid,
                             blockDlls,
-                            remoteAm51);
+                            remoteAm51,
+                            debug);
                         break;
 
                     case "modulestomping":
@@ -328,7 +354,8 @@ namespace DInjector
                             options["/stompExport"],
                             ppid,
                             blockDlls,
-                            remoteAm51);
+                            remoteAm51,
+                            debug);
                         break;
                 }
             }

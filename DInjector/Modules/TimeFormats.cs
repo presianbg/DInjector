@@ -8,7 +8,7 @@ namespace DInjector
 {
     class TimeFormats
     {
-        public static void Execute(byte[] shellcode)
+        public static void Execute(byte[] shellcode, bool debug = false)
         {
             #region NtAllocateVirtualMemory (PAGE_READWRITE)
 

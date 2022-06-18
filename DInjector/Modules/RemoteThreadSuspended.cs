@@ -8,7 +8,7 @@ namespace DInjector
 {
     class RemoteThreadSuspended
     {
-        public static void Execute(byte[] shellcode, int processID, int flipSleep, bool remoteAm51, bool forceAm51)
+        public static void Execute(byte[] shellcode, int processID, int flipSleep, bool remoteAm51, bool forceAm51, bool debug = false)
         {
             #region NtOpenProcess
 

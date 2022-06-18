@@ -11,7 +11,7 @@ namespace DInjector
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate void pFunction();
 
-        public static void Execute(byte[] shellcode)
+        public static void Execute(byte[] shellcode, bool debug = false)
         {
             unsafe
             {
