@@ -216,16 +216,7 @@ references:
   - 'https://github.com/ReversingID/Shellcode-Loader/blob/master/windows/execution/callback/EnumTimeFormatsEx/c++/code.cpp'
 ```
 
-:information_source: This is just one example of a whole bunch of API calls that expect a callback function as an argument and can potentially be abused for shellcode execution:
-
-```
-EnumFontFamiliesEx
-EnumResourceTypesEx
-EnumSystemLocalesEx
-EnumTimeFormatsEx
-EnumerateLoadedModulesEx
-...
-```
+:information_source: This is just one example of a whole bunch of API calls that expect a callback function as an argument and [can potentially be abused](https://github.com/aahmad097/AlternativeShellcodeExec) for shellcode execution.
 
 ### [ClipboardPointer](/DInjector/Modules/ClipboardPointer.cs)
 
