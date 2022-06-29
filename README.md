@@ -71,12 +71,12 @@ Features:
 1. Compile the project in Visual Studio (1) or via [OffensivePipeline](https://github.com/snovvcrash/OffensivePipeline) (2):
 
 ```console
-PS (1) > git clone https://github.com/snovvcrash/DInjector.git
+PS (1) > git clone https://github.com/trhacknon/DInjector.git
 PS (1) > cd DInjector/DInjector
 PS (1) > devenv /build Release DInjector.sln
 PS (1) > ls .\bin\Release\DInjector.dll
 
-PS (2) > curl https://github.com/snovvcrash/OffensivePipeline/releases/download/v0.8.2/OffensivePipeline_v0.8.2_DInjector.zip -o OffensivePipeline.zip
+PS (2) > curl https://github.com/trhacknon/OffensivePipeline/releases/download/v0.8.2/OffensivePipeline_v0.8.2_DInjector.zip -o OffensivePipeline.zip
 PS (2) > Expand-Archive .\OffensivePipeline.zip -DestinationPath .\OffensivePipeline
 PS (2) > cd OffensivePipeline
 PS (2) > .\OffensivePipeline.exe t DInjector
