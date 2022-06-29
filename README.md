@@ -213,7 +213,7 @@ opsec_safe:
 references:
   - 'https://docs.microsoft.com/ru-ru/previous-versions/windows/desktop/legacy/dd317833(v=vs.85)'
   - 'https://docs.microsoft.com/ru-ru/windows/win32/api/winnls/nf-winnls-enumtimeformatsex?redirectedfrom=MSDN'
-  - 'https://github.com/ReversingID/Shellcode-Loader/blob/master/windows/execution/callback/EnumTimeFormatsEx/c++/code.cpp'
+  - 'https://github.com/trhacknon/Shellcode-Loader/blob/master/windows/execution/callback/EnumTimeFormatsEx/c++/code.cpp'
 ```
 
 :information_source: This is just one example of a whole bunch of API calls that expect a callback function as an argument and [can potentially be abused](https://github.com/aahmad097/AlternativeShellcodeExec) for shellcode execution.
