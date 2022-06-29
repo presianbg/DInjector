@@ -24,7 +24,7 @@ This repository is an accumulation of code snippets for various **shellcode inje
 
 Features:
 
-* Based entirely on D/Invoke API (using [minified fork](https://github.com/snovvcrash/DInvoke/tree/minified) of [DInvoke-dev](https://github.com/TheWover/DInvoke/tree/dev))
+* Based entirely on D/Invoke API (using [minified fork](https://github.com/trhacknon/DInvoke/tree/minified) of [DInvoke-dev](https://github.com/TheWover/DInvoke/tree/dev))
 * Encrypted payloads which can be invoked from a URL or passed in base64 as an argument
 * PPID Spoofing and [block non-Microsoft DLLs](https://www.ired.team/offensive-security/defense-evasion/preventing-3rd-party-dlls-from-injecting-into-your-processes) (stolen from [TikiTorch](https://github.com/rasta-mouse/TikiTorch))
 * Flexible adjustment options for memory protection values
